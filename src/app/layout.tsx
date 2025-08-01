@@ -1,3 +1,5 @@
+import React from 'react';
+import ReactQueryProvider from '@/utils/providers/ReactQueryProvider.tsx';
 import './globals.css';
 
 export const metdata = {
@@ -12,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang='en'>
-      <body>{children}</body>
+      <body>
+        <ReactQueryProvider>{children}</ReactQueryProvider>
+      </body>
     </html>
   );
 }

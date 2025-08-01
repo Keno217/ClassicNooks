@@ -11,7 +11,18 @@ export async function GET(request: Request) {
   }
 
   const page =
-    !currentPage || isNaN(Number(currentPage)) ? 1 : parseInt(currentPage);
+    !currentPage || isNaN(Number(currentPage)) ? 1 : Number(currentPage);
+
+  if (!Number.isSafeInteger(page) || page <= 0 || page > 2_147_483_647) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid Page. Number is out of range.' }),
+      {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
   // Get the pages the client already received
   const offset = (page - 1) * bookLimit;
 
@@ -46,8 +57,18 @@ export async function GET(request: Request) {
       );
 
       const books = bookQuery.rows;
-      const totalCount = parseInt(countQuery.rows[0].total);
-      const totalPages = Math.ceil(totalCount / bookLimit);
+      let totalBookCount = parseInt(countQuery.rows[0].total);
+
+      // If client inputs invalid page, there are no books
+      totalBookCount =
+        page < 1 || offset >= totalBookCount ? 0 : totalBookCount;
+
+      // If client inputs invalid page, there are no pages
+      const totalPages =
+        page < 1 || offset >= totalBookCount
+          ? 0
+          : Math.ceil(totalBookCount / bookLimit);
+
       const nextPage =
         page < totalPages
           ? `http://localhost:3000/api/books?page=${
@@ -59,7 +80,7 @@ export async function GET(request: Request) {
         JSON.stringify({
           page: page,
           totalPages: totalPages,
-          books: totalCount,
+          books: totalBookCount,
           next: nextPage,
           results: books,
         }),
@@ -86,10 +107,18 @@ export async function GET(request: Request) {
     );
 
     const countQuery = await pool.query(`SELECT COUNT(*) AS total FROM books`);
-
     const books = bookQuery.rows;
-    const totalCount = parseInt(countQuery.rows[0].total);
-    const totalPages = Math.ceil(totalCount / bookLimit);
+    let totalBookCount = parseInt(countQuery.rows[0].total);
+
+    // If client inputs invalid page, there are no books
+    totalBookCount = page < 1 || offset >= totalBookCount ? 0 : totalBookCount;
+
+    // If client inputs invalid page, there are no pages
+    const totalPages =
+      page < 1 || offset >= totalBookCount
+        ? 0
+        : Math.ceil(totalBookCount / bookLimit);
+
     const nextPage =
       page < totalPages
         ? `http://localhost:3000/api/books?page=${page + 1}`
@@ -99,7 +128,7 @@ export async function GET(request: Request) {
       JSON.stringify({
         page: page,
         totalPages: totalPages,
-        books: totalCount,
+        books: totalBookCount,
         next: nextPage,
         results: books,
       }),

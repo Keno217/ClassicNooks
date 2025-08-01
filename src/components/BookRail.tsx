@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Book from './Book.tsx';
+import { useQuery } from '@tanstack/react-query';
+import BookCard from './BookCard.tsx';
 
 interface Author {
   name: string;
@@ -21,77 +22,84 @@ export default function BookRail({
   title: string;
   url: string;
 }) {
-  const [books, setBooks] = useState<Book[]>([]);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const bookRailRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
 
-  useEffect(() => {
+  const fetchAllBooks = async (url: string): Promise<Book[]> => {
     let nextPage: string | null = url;
+    let allBooks: Book[] = [];
+    let totalBooks = 0;
 
-    const fetchBooks = async () => {
-      let totalBooks = 0;
+    while (nextPage) {
+      if (totalBooks >= 1000) break;
+      const res = await fetch(nextPage);
+      const data: {
+        page: string;
+        totalPages: string;
+        books: string; // This is book count
+        next: string | null;
+        results: Book[];
+      } = await res.json();
+      allBooks.push(...data.results);
+      totalBooks += data.results.length;
+      nextPage = data.next;
+    }
 
-      while (nextPage) {
-        if (totalBooks >= 1000) break;
+    return allBooks;
+  };
 
-        try {
-          const res = await fetch(nextPage);
-          const data = await res.json();
-          nextPage = data.next;
-          totalBooks += data.results.length;
-          setBooks((prevBooks) => [...prevBooks, ...data.results]);
-        } catch (err) {
-          console.log(err);
-        }
-      }
-    };
-
-    fetchBooks();
-  }, []);
+  const { data: books = [] } = useQuery({
+    queryKey: ['books', url],
+    queryFn: () => fetchAllBooks(url),
+  });
 
   console.log(books);
 
   const updateArrowVisibility = () => {
-    const container = scrollContainerRef.current;
+    const container = bookRailRef.current;
+
     if (container) {
-      setShowLeftArrow(container.scrollLeft > 0);
-      setShowRightArrow(
-        container.scrollLeft < container.scrollWidth - container.clientWidth
-      );
+      // Has the user scrolled at all?
+      const hasScrolledLeft = container.scrollLeft > 0; // Display left arrow if they did
+      const hasScrolledRight =
+        container.scrollLeft <
+        container.scrollWidth - container.clientWidth; /* Display right arrow
+      if not at the end of container */
+
+      setShowLeftArrow(hasScrolledLeft);
+      setShowRightArrow(hasScrolledRight);
     }
   };
 
+  useEffect(() => {
+    const container = bookRailRef.current;
+    if (container) {
+      updateArrowVisibility();
+      container.addEventListener('scroll', updateArrowVisibility);
+
+      return () => {
+        container.removeEventListener('scroll', updateArrowVisibility);
+      };
+    }
+  }, []);
+
   const scrollLeft = () => {
-    const container = scrollContainerRef.current;
+    const container = bookRailRef.current;
     if (container) {
       container.scrollBy({ left: -400, behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
-    const container = scrollContainerRef.current;
+    const container = bookRailRef.current;
     if (container) {
       container.scrollBy({ left: 400, behavior: 'smooth' });
     }
   };
 
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (container) {
-      updateArrowVisibility();
-      container.addEventListener('scroll', updateArrowVisibility);
-      window.addEventListener('resize', updateArrowVisibility);
-
-      return () => {
-        container.removeEventListener('scroll', updateArrowVisibility);
-        window.removeEventListener('resize', updateArrowVisibility);
-      };
-    }
-  }, [books]);
-
   const BookElements = books.map((bookObj) => (
-    <Book
+    <BookCard
       key={bookObj.id}
       title={bookObj.title ?? 'Untitled'}
       author={bookObj.authors.map((a) => a.name).join(', ') ?? 'Unknown'}
@@ -103,7 +111,6 @@ export default function BookRail({
     <section className='w-full flex flex-col px-4 mt-8'>
       <h2 className='text-xl font-bold mb-2'>{title}</h2>
       <div className='relative group'>
-        {/* Left Arrow */}
         {showLeftArrow && (
           <button
             onClick={scrollLeft}
@@ -125,8 +132,6 @@ export default function BookRail({
             </svg>
           </button>
         )}
-
-        {/* Right Arrow */}
         {showRightArrow && (
           <button
             onClick={scrollRight}
@@ -148,10 +153,8 @@ export default function BookRail({
             </svg>
           </button>
         )}
-
-        {/* Scrollable Container */}
         <div
-          ref={scrollContainerRef}
+          ref={bookRailRef}
           className='flex overflow-x-auto gap-4 scrollbar-hide scroll-smooth'
         >
           {BookElements}
