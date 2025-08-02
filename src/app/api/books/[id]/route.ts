@@ -4,7 +4,9 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  if (!params.id || isNaN(Number(params.id))) {
+  const { id } = await params;
+
+  if (!id || isNaN(Number(id))) {
     return new Response(
       JSON.stringify({ error: 'Invalid book ID, it must be a number.' }),
       {
@@ -14,7 +16,7 @@ export async function GET(
     );
   }
 
-  const bookId = Number(params.id);
+  const bookId = Number(id);
 
   if (!Number.isSafeInteger(bookId) || bookId <= 0 || bookId > 2_147_483_647) {
     return new Response(

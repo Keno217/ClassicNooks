@@ -101,6 +101,7 @@ export default function BookRail({
   const BookElements = books.map((bookObj) => (
     <BookCard
       key={bookObj.id}
+      id={bookObj.id}
       title={bookObj.title ?? 'Untitled'}
       author={bookObj.authors.map((a) => a.name).join(', ') ?? 'Unknown'}
       cover={bookObj.cover}
