@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { use } from 'react';
@@ -58,22 +59,61 @@ export default function BookSummary({
         )
       : [];
 
-  const genreElements = genres?.map((genre) => <li key={genre}>{genre}</li>);
+  const genreElements = genres?.map((genre) => (
+    <li className='px-4 py-2 bg-gray-300 rounded-lg text-sm' key={genre}>
+      {genre}
+    </li>
+  ));
   const isGenre = genres.length > 0;
 
   return (
     <div className='flex flex-col lg:min-h-screen'>
       <Navbar />
       <main className='lg:flex'>
-        <div className='flex flex-col-reverse'>
-          <div className='flex flex-col lg:w-9/12'>
-            <h1>{book.title}</h1>
-            <h2>By {authorsName}</h2>
-            <p>{book.description}</p>
-            <ul className='flex gap-4'>{genreElements}</ul>
-            <Link href={`/books/${bookId}/read-now`}>Read Now</Link>
+        <div className='flex flex-col-reverse px-2'>
+          <div className='flex flex-col lg:w-9/12 gap-4 mt-4'>
+            <div>
+              <h1 className='text-center text-2xl'>{book.title}</h1>
+              <h2 className='text-center text-gray-500'>By {authorsName}</h2>
+            </div>
+            <div className='flex flex-col-reverse'>
+              <p className='text-base mt-4 px-4 max-w-[100ch]'>
+                {book.description}
+              </p>
+              <ul className='flex flex-wrap justify-center gap-4 text-xl'>
+                {genreElements}
+              </ul>
+            </div>
+            <Link
+              className='w-fit h-fit m-auto mt-4 rounded px-5 py-3 bg-amber-500 text-lg'
+              href={`/books/${bookId}/read-now`}
+            >
+              Read Now
+            </Link>
+            <div className='flex justify-center items-center gap-4 mt-4'>
+              <button className='p-3 border rounded-full hover:cursor-pointer'>
+                <Image
+                  src='/icons/heartIcon.png'
+                  alt='Add to Favorites'
+                  width='32'
+                  height='32'
+                />
+              </button>
+              <button
+                className='p-3 border rounded-full hover:cursor-pointer'
+                onClick={() => {
+                  console.log('test');
+                }}
+              >
+                <img
+                  src='https://cdn-icons-png.flaticon.com/512/0/532.png'
+                  alt='Download eBook'
+                  className='w-[32px] h-[32px]'
+                />
+              </button>
+            </div>
           </div>
-          <figure className='flex flex-grow justify-center items-center'>
+          <figure className='mt-8 flex flex-grow justify-center items-center'>
             <img
               src={book.cover}
               alt={`Cover of ${book.title} by ${authorsName}`}

@@ -74,6 +74,7 @@ export default function BookRail({
 
   useEffect(() => {
     const container = bookRailRef.current;
+
     if (container) {
       updateArrowVisibility();
       container.addEventListener('scroll', updateArrowVisibility);
@@ -86,6 +87,7 @@ export default function BookRail({
 
   const scrollLeft = () => {
     const container = bookRailRef.current;
+
     if (container) {
       container.scrollBy({ left: -400, behavior: 'smooth' });
     }
@@ -93,6 +95,7 @@ export default function BookRail({
 
   const scrollRight = () => {
     const container = bookRailRef.current;
+
     if (container) {
       container.scrollBy({ left: 400, behavior: 'smooth' });
     }
