@@ -3,12 +3,14 @@ import pool from '@/lib/db.ts';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const currentPage = searchParams.get('page');
+  let bookInput = searchParams.get('book');
+  let authorInput = searchParams.get('author');
   let bookGenre = searchParams.get('genre');
   const bookLimit = 100;
 
-  if (bookGenre) {
-    bookGenre = bookGenre.toLowerCase().trim();
-  }
+  if (bookInput) bookInput.toLowerCase().trim();
+  if (authorInput) authorInput.toLowerCase().trim();
+  if (bookGenre) bookGenre = bookGenre.toLowerCase().trim();
 
   const page =
     !currentPage || isNaN(Number(currentPage)) ? 1 : Number(currentPage);
@@ -24,10 +26,12 @@ export async function GET(request: Request) {
   }
 
   // Get the pages the client already received
+  // FIXME: Offset can be BookID since book table is sequential
   const offset = (page - 1) * bookLimit;
 
   try {
     if (bookGenre && bookGenre !== '') {
+      // FIXME: Implement seek method
       const bookQuery = await pool.query(
         `SELECT 
         b.*, 

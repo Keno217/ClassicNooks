@@ -62,10 +62,11 @@ export default function BookRail({
     if (container) {
       // Has the user scrolled at all?
       const hasScrolledLeft = container.scrollLeft > 0; // Display left arrow if they did
+
+      /* Display right arrow if
+      not at the end of container */
       const hasScrolledRight =
-        container.scrollLeft <
-        container.scrollWidth - container.clientWidth; /* Display right arrow
-      if not at the end of container */
+        container.scrollLeft < container.scrollWidth - container.clientWidth;
 
       setShowLeftArrow(hasScrolledLeft);
       setShowRightArrow(hasScrolledRight);
@@ -83,7 +84,9 @@ export default function BookRail({
         container.removeEventListener('scroll', updateArrowVisibility);
       };
     }
-  }, []);
+    /* Books in dependency arr so the
+    arrows appear upon rendering books */
+  }, [books]);
 
   const scrollLeft = () => {
     const container = bookRailRef.current;

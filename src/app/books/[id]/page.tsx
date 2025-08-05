@@ -8,7 +8,7 @@ import Navbar from '@/components/Navbar.tsx';
 import BookRail from '@/components/BookRail.tsx';
 import allGenres from '@/data/genres.ts';
 
-export default function BookSummary({
+export default function BookInfo({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -60,82 +60,103 @@ export default function BookSummary({
       : [];
 
   const genreElements = genres?.map((genre) => (
-    <li className='px-4 py-2 bg-gray-300 rounded-lg text-sm' key={genre}>
+    <li
+      className='px-3 py-1.5 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 rounded-full text-sm font-medium border border-blue-300 transition-all duration-300 hover:shadow-md hover:scale-110 cursor-default'
+      key={genre}
+    >
       {genre}
     </li>
   ));
+
   const isGenre = genres.length > 0;
 
+  /* 
+    TODO: Convert all img to Image component for optimization later
+    const bookCover =
+      book.cover && book.cover !== '' ? book.cover : '/book-cover.jpg';
+  */
+
   return (
-    <div className='flex flex-col lg:min-h-screen'>
+    <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100'>
       <Navbar />
-      <main className='lg:flex'>
-        <div className='flex flex-col-reverse px-2'>
-          <div className='flex flex-col lg:w-9/12 gap-4 mt-4'>
-            <div>
-              <h1 className='text-center text-2xl'>{book.title}</h1>
-              <h2 className='text-center text-gray-500'>By {authorsName}</h2>
+      <main className='container mx-auto px-4 py-8 lg:py-12'>
+        <div className='max-w-7xl mx-auto'>
+          <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12'>
+            <div className='xl:col-span-3 lg:col-span-4'>
+              <figure className='flex justify-center items-center h-full w-full'>
+                <div className='w-[160px] h-[250px] lg:h-[500px] lg:w-80 flex justify-center items-center'>
+                  <img
+                    src={book.cover}
+                    alt={`Cover of ${book.title} by ${authorsName}`}
+                    className='rounded-lg shadow-2xl w-full h-full object-fill'
+                  />
+                </div>
+              </figure>
             </div>
-            <div className='flex flex-col-reverse'>
-              <p className='text-base mt-4 px-4 max-w-[100ch]'>
-                {book.description}
-              </p>
-              <ul className='flex flex-wrap justify-center gap-4 text-xl'>
-                {genreElements}
-              </ul>
-            </div>
-            <Link
-              className='w-fit h-fit m-auto mt-4 rounded px-5 py-3 bg-amber-500 text-lg'
-              href={`/books/${bookId}/read-now`}
-            >
-              Read Now
-            </Link>
-            <div className='flex justify-center items-center gap-4 mt-4'>
-              <button className='p-3 border rounded-full hover:cursor-pointer'>
-                <Image
-                  src='/icons/heartIcon.png'
-                  alt='Add to Favorites'
-                  width='32'
-                  height='32'
-                />
-              </button>
-              <button
-                className='p-3 border rounded-full hover:cursor-pointer'
-                onClick={() => {
-                  console.log('test');
-                }}
-              >
-                <img
-                  src='https://cdn-icons-png.flaticon.com/512/0/532.png'
-                  alt='Download eBook'
-                  className='w-[32px] h-[32px]'
-                />
-              </button>
+            <div className='lg:col-span-8 xl:col-span-9 space-y-6'>
+              <div className='text-center lg:text-left space-y-2'>
+                <h1 className='text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight'>
+                  {book.title}
+                </h1>
+                <h2 className='text-lg md:text-xl text-gray-600 font-medium'>
+                  By {authorsName}
+                </h2>
+              </div>
+              <div className='flex justify-center lg:justify-start'>
+                <ul className='flex flex-wrap justify-center gap-2 md:gap-3'>
+                  {genreElements}
+                </ul>
+              </div>
+              <div className='bg-white rounded-xl p-6 md:p-8 shadow-lg border border-gray-100'>
+                <p className='text-gray-700 text-base md:text-lg leading-relaxed max-w-none'>
+                  {book.description}
+                </p>
+              </div>
+              <div className='flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4'>
+                <Link
+                  className='w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-500/50'
+                  href={`/books/${bookId}/read-now`}
+                >
+                  📖 Read Now
+                </Link>
+                <div className='flex items-center gap-3'>
+                  <button className='cursor-pointer group p-4 bg-white hover:bg-red-50 border-2 border-gray-200 hover:border-red-300 rounded-xl transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-red-500/20'>
+                    <Image
+                      src='/icons/heartIcon.png'
+                      alt='Add to Favorites'
+                      width='28'
+                      height='28'
+                      className='group-hover:scale-110 transition-transform duration-200'
+                    />
+                  </button>
+                  <button className='cursor-pointer group p-4 bg-white hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-300 rounded-xl transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-500/20'>
+                    <img
+                      src='https://cdn-icons-png.flaticon.com/512/0/532.png'
+                      alt='Download eBook'
+                      className='w-7 h-7 group-hover:scale-110 transition-transform duration-200'
+                    />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <figure className='mt-8 flex flex-grow justify-center items-center'>
-            <img
-              src={book.cover}
-              alt={`Cover of ${book.title} by ${authorsName}`}
-            ></img>
-          </figure>
         </div>
       </main>
-      {isGenre ? (
-        <footer className='mt-auto mb-8'>
-          <BookRail
-            title='Similar books you may like...'
-            url={`http://localhost:3000/api/books?genre=${genres[0]}`}
-          />
-        </footer>
-      ) : (
-        <footer className='mt-auto'>
-          <BookRail
-            title='Other Trending Books'
-            url='http://localhost:3000/api/books'
-          />
-        </footer>
-      )}
+      <footer className='bg-white border-t border-gray-200 mt-16'>
+        <div className='py-12'>
+          {isGenre ? (
+            <BookRail
+              title='Similar books you may like...'
+              url={`http://localhost:3000/api/books?genre=${genres[0]}`}
+            />
+          ) : (
+            <BookRail
+              title='Other Trending Books'
+              url='http://localhost:3000/api/books'
+            />
+          )}
+        </div>
+      </footer>
     </div>
   );
 }
