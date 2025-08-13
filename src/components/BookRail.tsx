@@ -23,6 +23,13 @@ export default function BookRail({
   url: string;
 }) {
   const bookRailRef = useRef<HTMLDivElement>(null);
+  /* 
+  TODO: Implement hash map instead of arr
+
+  const [arrows, setArrows] = useState({
+    left: false,
+    right: false,
+  }); */
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
 
