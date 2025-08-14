@@ -10,3 +10,11 @@ export interface Book {
   description: string;
   authors: Author[];
 }
+
+export interface GetBookApiResponse {
+  page: number;
+  totalPages: number;
+  books: number;
+  next: string | null;
+  results: Book[];
+}
