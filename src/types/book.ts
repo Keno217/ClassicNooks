@@ -1,5 +1,6 @@
 export interface Author {
   name: string;
+  birth_year: number;
 }
 
 export interface Book {
@@ -8,6 +9,7 @@ export interface Book {
   cover: string;
   book: string;
   description: string;
+  genres: string[];
   authors: Author[];
 }
 

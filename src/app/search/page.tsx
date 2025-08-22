@@ -38,11 +38,10 @@ export default function searchPage() {
     try {
       const res = await fetch(currentPage);
 
-      if (!res.ok) {
+      if (!res.ok)
         throw new Error(
           `Failed to fetch book relating to ${searchQuery}. Status: ${res.status}`
         );
-      }
 
       const data: GetBookApiResponse = await res.json();
       return data;
@@ -58,7 +57,7 @@ export default function searchPage() {
     enabled: searchQuery !== '' && currentPage !== null,
   });
 
-  // Derived variables
+  // Derived values
   const books: Book[] = Array.isArray(data?.results) ? data.results : [];
   const canPrev = pageHistory.length > 1;
   const canNext = Boolean(data?.next);
