@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import BookCard from './BookCard.tsx';
@@ -122,56 +123,48 @@ export default function BookRail({
   ));
 
   return (
-    <section className='w-full flex flex-col px-4 mt-8'>
-      <h2 className='text-xl font-bold mb-2'>{title}</h2>
-      <div className='relative group'>
-        {showLeftArrow && (
-          <button
-            onClick={scrollLeft}
-            className='absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 mx-4 bg-gray-800/20 hover:bg-gray-800/40 rounded-full flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100'
-            aria-label='Scroll left'
-          >
-            <svg
-              className='w-6 h-6 text-white'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
+    <section className='w-full flex flex-col px-4 lg:px-6 py-6'>
+      <div className='max-w-7xl mx-auto w-full'>
+        <h2 className='text-2xl md:text-3xl font-bold text-gray-900 mb-6'>
+          {title}
+        </h2>
+        <div className='relative group'>
+          {showLeftArrow && (
+            <button
+              onClick={scrollLeft}
+              className='absolute left-0 top-0 z-10 w-16 h-full bg-gradient-to-r from-black/30 to-transparent flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100'
+              aria-label='Scroll left'
             >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M15 19l-7-7 7-7'
+              <Image
+                src='/icons/leftArrowIcon.png'
+                alt='Click to view more books'
+                width={24}
+                height={24}
+                className='w-6 h-6'
               />
-            </svg>
-          </button>
-        )}
-        {showRightArrow && (
-          <button
-            onClick={scrollRight}
-            className='absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 mx-4 bg-gray-800/20 hover:bg-gray-800/40 rounded-full flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100'
-            aria-label='Scroll right'
-          >
-            <svg
-              className='w-6 h-6 text-white'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
+            </button>
+          )}
+          {showRightArrow && (
+            <button
+              onClick={scrollRight}
+              className='absolute right-0 top-0 z-10 w-16 h-full bg-gradient-to-l from-black/30 to-transparent flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100'
+              aria-label='Scroll right'
             >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M9 5l7 7-7 7'
+              <Image
+                src='/icons/rightArrowIcon.png'
+                alt='Click to view more books'
+                width={24}
+                height={24}
+                className='w-6 h-6'
               />
-            </svg>
-          </button>
-        )}
-        <div
-          ref={bookRailRef}
-          className='flex overflow-x-auto gap-4 scrollbar-hide scroll-smooth'
-        >
-          {BookElements}
+            </button>
+          )}
+          <div
+            ref={bookRailRef}
+            className='flex overflow-x-auto gap-4 md:gap-6 scrollbar-hide scroll-smooth pb-2'
+          >
+            {BookElements}
+          </div>
         </div>
       </div>
     </section>

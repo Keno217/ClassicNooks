@@ -92,9 +92,9 @@ export default function Navbar() {
         />
       </div>
       <div className='flex flex-col justify-center flex-1 min-w-0'>
-        <h2 className='text-sm font-semibold line-clamp-2 text-gray-900 group-hover:text-amber-700 transition-colors duration-200'>
+        <h3 className='text-sm font-semibold line-clamp-2 text-gray-900 group-hover:text-amber-700 transition-colors duration-200'>
           {book.title}
-        </h2>
+        </h3>
         <h3 className='text-xs text-gray-600 line-clamp-1 mt-1'>
           {book.authors.map((author) => author.name).join(', ')}
         </h3>
@@ -106,9 +106,9 @@ export default function Navbar() {
     <>
       <header className='w-full h-[10vh] flex items-center p-4 border-b bg-gradient-to-r from-white via-slate-50 to-white border-gray-200 z-20 sticky inset-0 shadow-lg backdrop-blur-sm'>
         <div className='h-full w-full flex items-center gap-8'>
-          <h1 className='text-4xl font-bold bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300'>
+          <h2 className='text-4xl font-bold bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300'>
             📚 BookWorm
-          </h1>
+          </h2>
           <button
             className='flex ml-auto flex-col gap-1.5 items-end hover:cursor-pointer sm:hidden p-2 rounded-lg hover:bg-amber-50 transition-all duration-200 group'
             onClick={toggleNavbar}
@@ -194,9 +194,9 @@ export default function Navbar() {
         }`}
       >
         <div className='flex items-center justify-between mb-8'>
-          <h2 className='text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent'>
+          <h3 className='text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent'>
             📚 Menu
-          </h2>
+          </h3>
           <button
             className='flex flex-col gap-1 items-center justify-center w-10 h-10 p-2 hover:cursor-pointer hover:bg-amber-100 rounded-xl transition-all duration-200 group'
             onClick={toggleNavbar}

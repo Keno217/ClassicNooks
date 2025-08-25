@@ -36,6 +36,7 @@ export async function GET(
       b.title,
       b.cover,
       b.description,
+      b.book,
       json_agg(DISTINCT jsonb_build_object(
         'name', a.name,
         'birth_year', a.birth_year
