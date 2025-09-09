@@ -3,7 +3,7 @@ import BookRail from '../components/BookRail.tsx';
 
 export default function Home() {
   // Orange Wave made with AI
-  const waveBG = (
+  const waveBGElement = (
     <svg
       className='absolute bottom-0 left-0 w-full h-32 text-orange-500'
       preserveAspectRatio='none'
@@ -19,11 +19,11 @@ export default function Home() {
   return (
     <div className='w-full h-full flex flex-col'>
       <Navbar />
-      <div className='h-[33.33vh] flex items-center justify-center relative overflow-hidden bg-gradient-to-tr from-orange-600 to-orange-400'>
+      <div className='h-[33.33vh] flex items-center justify-center relative overflow-hidden bg-gradient-to-tr from-orange-600 to-orange-400 text-center'>
         <h1 className='text-white text-3xl font-bold z-10'>
           Thousands of free classics, waiting for you to explore.
         </h1>
-        {waveBG}
+        {waveBGElement}
       </div>
       <main>
         <BookRail title='Trending' url='/api/books' />
