@@ -1,7 +1,8 @@
+import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db.ts';
 import { sanitizeInput } from '@/utils/sanitizeInput';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const DEFAULT_LIMIT: number = 100;
   const lastBookId: string | null = searchParams.get('lastId');
@@ -13,24 +14,18 @@ export async function GET(request: Request) {
     !lastBookId || isNaN(Number(lastBookId)) ? 0 : Number(lastBookId);
 
   if (!Number.isInteger(lastId) || lastId < 0 || lastId > 2_147_483_647)
-    return new Response(
-      JSON.stringify({ error: 'Invalid ID. Number is out of range.' }),
-      {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      }
+    return NextResponse.json(
+      { error: 'Invalid ID. Number is out of range.' },
+      { status: 400 }
     );
 
   const limit: number =
     !bookLimit || isNaN(Number(bookLimit)) ? DEFAULT_LIMIT : Number(bookLimit);
 
   if (!Number.isInteger(limit) || limit <= 0 || limit > DEFAULT_LIMIT)
-    return new Response(
-      JSON.stringify({ error: 'Invalid Limit. Number is out of range.' }),
-      {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      }
+    return NextResponse.json(
+      { error: 'Invalid limit. Number is out of range.' },
+      { status: 400 }
     );
 
   searchInput = sanitizeInput(searchInput ?? '');
@@ -40,20 +35,33 @@ export async function GET(request: Request) {
     const bookQuery = await pool.query(
       `
       SELECT 
-        b.*,
-        json_agg(DISTINCT jsonb_build_object('name', a.name, 'birth_year', a.birth_year)) AS authors,
-        json_agg(DISTINCT jsonb_build_object('name', g.name)) FILTER (WHERE g.name IS NOT NULL) AS genres
+        b.id,
+        b.title,
+        b.cover,
+        b.book,
+        b.description,
+        json_agg(DISTINCT jsonb_build_object(
+          'name', a.name,
+          'birth_year', a.birth_year
+        )) AS authors,
+        json_agg(DISTINCT jsonb_build_object(
+          'name', g.name
+        )) FILTER (WHERE g.name IS NOT NULL) AS genres
       FROM books b
-      JOIN book_authors ba ON b.id = ba.book_id
-      JOIN authors a       ON a.id = ba.author_id
-      LEFT JOIN book_genres bg ON b.id = bg.book_id
-      LEFT JOIN genres g        ON g.id = bg.genre_id
+      LEFT JOIN book_authors ba 
+        ON b.id = ba.book_id
+      LEFT JOIN authors a       
+        ON a.id = ba.author_id
+      LEFT JOIN book_genres bg  
+        ON b.id = bg.book_id
+      LEFT JOIN genres g        
+        ON g.id = bg.genre_id
       WHERE 
-        ($1 = '' OR b.title ILIKE '%' || $1 || '%' ESCAPE '\\' OR a.name ILIKE '%' || $1 || '%' ESCAPE '\\')
-        AND ($2 = '' OR g.name ILIKE '%' || $2 || '%' ESCAPE '\\')
-        AND ($3 = 0 OR b.id > $3)                -- seek forward from lastId
+        ($1 = '' OR b.title ILIKE '%' || $1 || '%' OR a.name ILIKE '%' || $1 || '%')
+        AND ($2 = '' OR g.name ILIKE '%' || $2 || '%')
+        AND ($3 = 0 OR b.id > $3)
       GROUP BY b.id
-      ORDER BY b.id ASC
+      ORDER BY b.id
       LIMIT $4;
       `,
       [searchInput, bookGenre, lastId, limit]
@@ -63,10 +71,14 @@ export async function GET(request: Request) {
       `
       SELECT COUNT(DISTINCT b.id) AS total
       FROM books b
-      JOIN book_authors ba ON b.id = ba.book_id
-      JOIN authors a       ON a.id = ba.author_id
-      LEFT JOIN book_genres bg ON b.id = bg.book_id
-      LEFT JOIN genres g        ON g.id = bg.genre_id
+      INNER JOIN book_authors ba
+        ON b.id = ba.book_id
+      INNER JOIN authors a 
+        ON a.id = ba.author_id
+      LEFT JOIN book_genres bg
+        ON b.id = bg.book_id
+      LEFT JOIN genres g
+        ON g.id = bg.genre_id
       WHERE 
         ($1 = '' OR b.title ILIKE '%' || $1 || '%' ESCAPE '\\' OR a.name ILIKE '%' || $1 || '%' ESCAPE '\\')
         AND ($2 = '' OR g.name ILIKE '%' || $2 || '%' ESCAPE '\\');
@@ -81,14 +93,18 @@ export async function GET(request: Request) {
 
     const positionQuery = await pool.query(
       `
-      SELECT COUNT(*)::bigint AS count_before
+      SELECT COUNT(*) AS count_before
       FROM (
         SELECT DISTINCT b.id
         FROM books b
-        JOIN book_authors ba ON b.id = ba.book_id
-        JOIN authors a       ON a.id = ba.author_id
-        LEFT JOIN book_genres bg ON b.id = bg.book_id
-        LEFT JOIN genres g        ON g.id = bg.genre_id
+        INNER JOIN book_authors ba 
+          ON b.id = ba.book_id
+        INNER JOIN authors a
+          ON a.id = ba.author_id
+        LEFT JOIN book_genres bg
+          ON b.id = bg.book_id
+        LEFT JOIN genres g
+          ON g.id = bg.genre_id
         WHERE 
           ($1 = '' OR b.title ILIKE '%' || $1 || '%' ESCAPE '\\' OR a.name ILIKE '%' || $1 || '%' ESCAPE '\\')
           AND ($2 = '' OR g.name ILIKE '%' || $2 || '%' ESCAPE '\\')
@@ -138,21 +154,22 @@ export async function GET(request: Request) {
       }?${url.searchParams.toString()}`;
     }
 
-    return new Response(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         page: currentPage,
         totalPages: totalPages,
         books: totalBookCount,
         next: nextPage,
         results: books,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
+      },
+      { status: 200 }
     );
+    
   } catch (err) {
     console.log(`DB query failed: ${err}`);
-    return new Response(`Internal server error`, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error.' },
+      { status: 500 }
+    );
   }
 }

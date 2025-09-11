@@ -22,7 +22,7 @@ export default function BookInfo({
     bookId = 1;
   }
 
-  const fetchBook = async (bookId: number) => {
+  const fetchBook = async () => {
     try {
       const res = await fetch(`http://localhost:3000/api/books/${bookId}`);
 
@@ -42,7 +42,7 @@ export default function BookInfo({
 
   const { data: book = [] } = useQuery({
     queryKey: ['book', bookId],
-    queryFn: () => fetchBook(bookId),
+    queryFn: fetchBook,
   });
 
   const authorsName =
@@ -71,7 +71,7 @@ export default function BookInfo({
   ));
 
   const isGenre = genres.length > 0;
-  const readBook = book.book ? book.book : pathName;
+  const readBook = book?.book ? book.book : pathName;
 
   /* 
     TODO: Convert all img to Image component for optimization later
@@ -89,8 +89,8 @@ export default function BookInfo({
               <figure className='flex justify-center items-center h-full w-full'>
                 <div className='w-[160px] h-[250px] lg:h-[500px] lg:w-80 flex justify-center items-center'>
                   <img
-                    src={book.cover}
-                    alt={`Cover of ${book.title} by ${authorsName}`}
+                    src={book?.cover}
+                    alt={`Cover of ${book?.title} by ${authorsName}`}
                     className='rounded-lg shadow-2xl w-full h-full object-fill'
                   />
                 </div>
@@ -99,7 +99,7 @@ export default function BookInfo({
             <div className='lg:col-span-8 xl:col-span-9 space-y-6'>
               <div className='text-center lg:text-left space-y-2'>
                 <h1 className='text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight'>
-                  {book.title}
+                  {book?.title}
                 </h1>
                 <h2 className='text-lg md:text-xl text-gray-600 font-medium'>
                   By {authorsName}
@@ -112,7 +112,7 @@ export default function BookInfo({
               </div>
               <div className='bg-white rounded-xl p-6 md:p-8 shadow-lg border border-gray-100'>
                 <p className='text-gray-700 text-base md:text-lg leading-relaxed max-w-none'>
-                  {book.description}
+                  {book?.description}
                 </p>
               </div>
               <div className='flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4'>

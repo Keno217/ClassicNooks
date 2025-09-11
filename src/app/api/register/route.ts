@@ -1,40 +1,34 @@
+import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db.ts';
 import argon2 from 'argon2';
 import { ratelimit } from '@/lib/ratelimiter';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     // Rate the amount of times a user can POST to this API
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
     const { success } = await ratelimit.limit(ip);
 
     if (!success)
-      return new Response(JSON.stringify({ error: 'Rate limit exceeded.' }), {
-        status: 429,
-      });
+      return NextResponse.json(
+        { error: 'Rate limit exceeded.' },
+        { status: 429 }
+      );
 
     const { user, password } = await req.json();
 
     if (!user || !password)
-      return new Response(JSON.stringify({ error: 'Missing Fields.' }), {
-        status: 400,
-      });
+      return NextResponse.json({ error: 'Missing fields.' }, { status: 400 });
 
     if (user.length < 3 || user.length > 30)
-      return new Response(
-        JSON.stringify({
-          error: 'Username must be between 3 and 30 characters.',
-        }),
-        {
-          status: 400,
-        }
+      return NextResponse.json(
+        { error: 'Username must be between 3 and 30 characters.' },
+        { status: 400 }
       );
 
     if (password.length < 8 || password.length > 64)
-      return new Response(
-        JSON.stringify({
-          error: 'Password must be between 8 and 64 characters.',
-        }),
+      return NextResponse.json(
+        { error: 'Password must be between 8 and 64 characters.' },
         { status: 400 }
       );
 
@@ -42,8 +36,8 @@ export async function POST(req: Request) {
     const username = user.toLowerCase().trim();
 
     if (!usernameRegex.test(username))
-      return new Response(
-        JSON.stringify({ error: 'Username contains invalid characters.' }),
+      return NextResponse.json(
+        { error: 'Username contains invalid characters.' },
         { status: 400 }
       );
 
@@ -58,8 +52,8 @@ export async function POST(req: Request) {
     );
 
     if (rows.length > 0)
-      return new Response(
-        JSON.stringify({ error: 'Username already exists.' }),
+      return NextResponse.json(
+        { error: 'Username already exists.' },
         { status: 409 }
       );
 
@@ -73,12 +67,16 @@ export async function POST(req: Request) {
       [username, hashedPassword]
     );
 
-    return new Response(
-      JSON.stringify({ message: 'User registration successful.', username }),
+    return NextResponse.json(
+      { message: 'User registration successful.' },
       { status: 201 }
     );
+
   } catch (err) {
     console.log(`Error handling user registration: ${err}`);
-    return new Response(`Internal server error`, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error.' },
+      { status: 500 }
+    );
   }
 }

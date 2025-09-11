@@ -1,10 +1,12 @@
+import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const { id } = await params;
+
   const ALLOWED_HOSTS = new Set([
     'www.gutenberg.org',
     'gutenberg.org',
@@ -12,24 +14,18 @@ export async function GET(
   ]);
 
   if (!id || isNaN(Number(id))) {
-    return new Response(
-      JSON.stringify({ error: 'Invalid book ID, it must be a number.' }),
-      {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      }
+    return NextResponse.json(
+      { error: 'Invalid book ID, it must be a number.' },
+      { status: 400 }
     );
   }
 
   const bookId = Number(id);
 
   if (!Number.isSafeInteger(bookId) || bookId <= 0 || bookId > 2_147_483_647) {
-    return new Response(
-      JSON.stringify({ error: 'Invalid Book ID. Number is out of range.' }),
-      {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      }
+    return NextResponse.json(
+      { error: 'Invalid Book ID. Number is out of range.' },
+      { status: 400 }
     );
   }
 
@@ -46,33 +42,27 @@ export async function GET(
     );
 
     if (rows.length === 0) {
-      return new Response(
-        JSON.stringify({ error: `Book#${bookId} could not be found.` }),
-        {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        }
+      return NextResponse.json(
+        { error: `Book#${bookId} could not be found.` },
+        { status: 404 }
       );
     }
 
     if (!rows[0].book) {
-      return new Response(
-        JSON.stringify({
-          error: `No text URL stored for book#${bookId} could be found.`,
-        }),
-        {
-          status: 422,
-          headers: { 'Content-Type': 'application/json' },
-        }
+      return NextResponse.json(
+        { error: `No text URL stored for book#${bookId} could be found.` },
+        { status: 422 }
       );
     }
+
     readBookUrl = rows[0].book;
   } catch (err) {
     console.log(`DB error. ${err}`);
-    return new Response(JSON.stringify({ error: 'Internal Server Error.' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+
+    return NextResponse.json(
+      { error: 'Internal server error.' },
+      { status: 500 }
+    );
   }
 
   /* Validate url */
@@ -81,19 +71,13 @@ export async function GET(
   try {
     url = new URL(readBookUrl);
   } catch (err) {
-    return new Response(JSON.stringify({ error: `Invalid text URL.` }), {
-      status: 422,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json({ error: 'Invalid text URL.' }, { status: 422 });
   }
 
   if (!ALLOWED_HOSTS.has(url.hostname))
-    return new Response(
-      JSON.stringify({ error: 'Upstream host not allowed.' }),
-      {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' },
-      }
+    return NextResponse.json(
+      { error: 'Upstream host not allowed.' },
+      { status: 403 }
     );
 
   try {
@@ -112,15 +96,16 @@ export async function GET(
 
     /* TODO: Parse text before sending */
 
-    return new Response(JSON.stringify(text), {
+    return new NextResponse(text, {
       status: 200,
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
+    
   } catch (err) {
     console.log(err);
-    return new Response(JSON.stringify({ error: `Upstream fetch error.` }), {
-      status: 502,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json(
+      { error: 'Upstream fetch error.' },
+      { status: 502 }
+    );
   }
 }
