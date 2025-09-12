@@ -24,7 +24,7 @@ export default function BookInfo({
 
   const fetchBook = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/books/${bookId}`);
+      const res = await fetch(`/api/books/${bookId}`);
 
       if (!res.ok) {
         throw new Error(
@@ -150,13 +150,10 @@ export default function BookInfo({
           {isGenre ? (
             <BookRail
               title='Similar books you may like...'
-              url={`http://localhost:3000/api/books?genre=${genres[0]}`}
+              url={`/api/books?genre=${genres[0]}`}
             />
           ) : (
-            <BookRail
-              title='Other Trending Books'
-              url='http://localhost:3000/api/books'
-            />
+            <BookRail title='Other Trending Books' url='/api/books' />
           )}
         </div>
       </footer>

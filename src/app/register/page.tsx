@@ -1,9 +1,12 @@
 'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function Register() {
   const [steps, setSteps] = useState(1);
+  const router = useRouter();
 
   function handleUserValidation(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -17,7 +20,7 @@ export default function Register() {
     // Password validation
 
     setSteps(1);
-    window.location.href = '/login';
+    router.push('/login');
   };
 
   return (

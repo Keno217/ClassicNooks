@@ -22,6 +22,7 @@ One of the main challenges I faced was optimizing how book metadata is fetched. 
 
 The best way to handle this data (in my approach) is to return something like:
 
+```json
 [
   {
     "title": "Table of Contents",
@@ -40,6 +41,7 @@ The best way to handle this data (in my approach) is to return something like:
     "content": "The next day..."
   }
 ]
+```
 
 Then, on the frontend you can map out this array. This allows the frontend to handle each major transition and ensures that titles don’t appear inline with the rest of the content.
 

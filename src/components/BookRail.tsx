@@ -4,17 +4,7 @@ import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import BookCard from './BookCard.tsx';
-
-interface Author {
-  name: string;
-}
-
-interface Book {
-  id: number;
-  title: string;
-  authors: Author[];
-  cover: string;
-}
+import type { Book } from '@/types/book';
 
 export default function BookRail({
   title,
@@ -23,16 +13,9 @@ export default function BookRail({
   title: string;
   url: string;
 }) {
-  const bookRailRef = useRef<HTMLDivElement>(null);
-  /* 
-  TODO: Implement hash map instead of arr
-
-  const [arrows, setArrows] = useState({
-    left: false,
-    right: false,
-  }); */
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
+  const bookRailRef = useRef<HTMLDivElement>(null);
 
   const fetchAllBooks = async (url: string): Promise<Book[]> => {
     let nextPage: string | null = url;
@@ -69,13 +52,14 @@ export default function BookRail({
 
     if (container) {
       // Has the user scrolled at all?
-      const hasScrolledLeft = container.scrollLeft > 0; // Display left arrow if they did
+      const hasScrolledLeft = container.scrollLeft > 0;
 
       /* Display right arrow if
       not at the end of container */
       const hasScrolledRight =
         container.scrollLeft < container.scrollWidth - container.clientWidth;
 
+      // Display left/right arrow if they did
       setShowLeftArrow(hasScrolledLeft);
       setShowRightArrow(hasScrolledRight);
     }
@@ -161,6 +145,7 @@ export default function BookRail({
           )}
           <div
             ref={bookRailRef}
+            data-testid='book-rail-container'
             className='flex overflow-x-auto gap-4 md:gap-6 scrollbar-hide scroll-smooth pb-2'
           >
             {BookElements}
