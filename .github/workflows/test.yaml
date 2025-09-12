@@ -20,7 +20,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 23.7.0
-          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
 
       - name: Install dependencies
         run: pnpm install
@@ -39,7 +43,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 23.7.0
-          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
 
       - name: Install dependencies
         run: pnpm install
