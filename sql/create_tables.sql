@@ -33,3 +33,19 @@ CREATE TABLE book_genres (
   genre_id INT REFERENCES genres(id) ON DELETE CASCADE,
   PRIMARY KEY (book_id, genre_id)
 );
+
+-- users table
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username VARCHAR(30) UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- user_books_history join table (many-to-many)
+CREATE TABLE user_books_history (
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    book_id INT REFERENCES books(id) ON DELETE CASCADE,
+    read_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (user_id, book_id)
+);

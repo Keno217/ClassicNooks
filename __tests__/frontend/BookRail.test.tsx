@@ -74,6 +74,7 @@ describe('BookRail', () => {
         level: 3,
         name: book.title,
       });
+      
       expect(title).toBeInTheDocument();
     }
 

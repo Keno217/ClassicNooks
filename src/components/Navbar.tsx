@@ -51,8 +51,6 @@ export default function Navbar() {
     enabled: debouncedSearchBook !== '',
   });
 
-  console.log(books);
-
   function toggleNavbar() {
     const isNavOpen = !isMobileNavOpen;
     document.body.style.overflow = isNavOpen ? 'hidden' : 'auto';

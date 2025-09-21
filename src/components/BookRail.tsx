@@ -45,8 +45,6 @@ export default function BookRail({
     queryFn: () => fetchAllBooks(url),
   });
 
-  console.log(books);
-
   const updateArrowVisibility = () => {
     const container = bookRailRef.current;
 
