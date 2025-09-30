@@ -157,6 +157,7 @@ describe('Navbar', () => {
     await user.type(searchInput, 'test');
 
     await waitFor(() => {
+      // FIXME: Change domain when pushed to prod
       expect(global.fetch).toHaveBeenCalledWith(
         'http://localhost:3000/api/books?search=test&limit=5'
       );

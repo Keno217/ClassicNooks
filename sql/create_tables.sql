@@ -36,16 +36,16 @@ CREATE TABLE book_genres (
 
 -- users table
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    username VARCHAR(30) UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username VARCHAR(30) UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
--- user_books_history join table (many-to-many)
-CREATE TABLE user_books_history (
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    book_id INT REFERENCES books(id) ON DELETE CASCADE,
-    read_at TIMESTAMP DEFAULT NOW(),
-    PRIMARY KEY (user_id, book_id)
+-- sessions table
+CREATE TABLE sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  expires_at TIMESTAMP NOT NULL
 );

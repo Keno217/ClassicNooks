@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     if (!user || !password)
       return NextResponse.json({ error: 'Missing fields.' }, { status: 400 });
-    
+
   } catch (err) {
     console.log(`Error parsing username/password: ${err}`);
     return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (err) {
-    console.log(`Unexpected error: ${err}`);
+    console.log(`DB/Session error: ${err}`);
     return NextResponse.json(
       { error: 'Internal server error.' },
       { status: 500 }
