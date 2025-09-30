@@ -1,10 +1,43 @@
 'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useMutation } from '@tanstack/react-query';
 
 export default function Login() {
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const router = useRouter();
+
+  const loginUser = async (data: { user: string; password: string }) => {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Login failed');
+    }
+
+    return res.json();
   };
+
+  const mutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: () => {
+      router.push('/');
+    },
+  });
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const user = formData.get('user') as string;
+    const password = formData.get('password') as string;
+
+    mutation.mutate({ user, password });
+  }
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4'>
@@ -49,11 +82,17 @@ export default function Login() {
                 placeholder='Enter your password'
               />
             </div>
+            {mutation.isError && (
+              <p className='text-red-500 text-center text-sm'>
+                {mutation.error.message}
+              </p>
+            )}
             <button
               type='submit'
+              disabled={mutation.isPending}
               className='w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-500/50'
             >
-              Sign In
+              {mutation.isPending ? 'Signing in...' : 'Sign In'}
             </button>
             <div className='text-center'>
               <Link
