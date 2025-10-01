@@ -2,24 +2,87 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Register() {
-  const [steps, setSteps] = useState(1);
   const router = useRouter();
+  const [step, setStep] = useState(1);
+  const [error, setError] = useState('');
 
-  function handleUserValidation(e: React.FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkLoggedIn = async () => {
+      try {
+        const res = await fetch('/api/me', { credentials: 'include' });
+        const data = await res.json();
+
+        if (res.ok && data.user?.username) {
+          router.push('/');
+        }
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+      }
+    };
+
+    checkLoggedIn();
+  }, []);
+
+  // Step 1: Validate username
+  function handleUsernameValidation(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    setSteps((prevStep) => prevStep + 1);
+    const formData = new FormData(e.currentTarget);
+    const username = (formData.get('user') as string).toLowerCase().trim();
+    const usernameRegex = /^[A-Za-z0-9]+$/;
+
+    if (username.length < 3 || username.length > 30) {
+      setError('Username must be between 3 and 30 characters');
+      return;
+    }
+
+    if (!usernameRegex.test(username)) {
+      setError('Username contains invalid characters');
+      return;
+    }
+
+    setError('');
+    setStep((prevStep) => prevStep + 1);
   }
 
+  // Step 2: Handle full registration
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Password validation
+    const formData = new FormData(e.currentTarget);
+    const user = (formData.get('user') as string).toLowerCase().trim();
+    const password = formData.get('password') as string;
 
-    setSteps(1);
+    if (password.length < 8 || password.length > 64) {
+      setError('Password must be between 8 and 64 characters');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user, password }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Registration failed. Please try again');
+      }
+
+    } catch (err: any) {
+      // err is always an obj that contains a message/error property
+      console.log(`Error registering user: ${err}`);
+      setError(err.message);
+      return;
+    }
+
+    setStep(1);
+    setError('');
     router.push('/login');
   };
 
@@ -36,7 +99,7 @@ export default function Register() {
           <form
             className='space-y-6'
             onSubmit={(e) =>
-              steps === 1 ? handleUserValidation(e) : handleSubmit(e)
+              step === 1 ? handleUsernameValidation(e) : handleSubmit(e)
             }
           >
             <div className='space-y-2'>
@@ -55,13 +118,18 @@ export default function Register() {
                 placeholder='Enter your username'
               />
             </div>
-            {steps === 1 ? (
-              <button
-                type='submit'
-                className='w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-500/50'
-              >
-                Continue
-              </button>
+            {step === 1 ? (
+              <>
+                <button
+                  type='submit'
+                  className='w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-500/50'
+                >
+                  Continue
+                </button>
+                {error && (
+                  <p className='text-sm text-red-500 text-center'>{error}</p>
+                )}
+              </>
             ) : (
               <>
                 <div className='space-y-2'>
@@ -79,7 +147,11 @@ export default function Register() {
                     className='w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-300 transition-all duration-300 hover:shadow-sm'
                     placeholder='Enter your password'
                   />
+                  {/* TODO: Add confirm password field */}
                 </div>
+                {error && (
+                  <p className='text-sm text-red-500 text-center'>{error}</p>
+                )}
                 <button
                   type='submit'
                   className='w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-500/50'

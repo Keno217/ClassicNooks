@@ -11,14 +11,14 @@ export async function POST(req: NextRequest) {
 
     if (!success)
       return NextResponse.json(
-        { error: 'Rate limit exceeded.' },
+        { error: 'Rate limit exceeded' },
         { status: 429 }
       );
 
   } catch (err) {
     console.log(`Rate limiter error: ${err}`);
     return NextResponse.json(
-      { error: 'Internal server error.' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -32,11 +32,11 @@ export async function POST(req: NextRequest) {
     password = body.password;
 
     if (!user || !password)
-      return NextResponse.json({ error: 'Missing fields.' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
   } catch (err) {
     console.log(`Error parsing username/password: ${err}`);
-    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
   try {
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
     if (rows.length === 0)
       return NextResponse.json(
-        { error: 'Invalid username or password.' },
+        { error: 'Invalid username or password' },
         { status: 401 }
       );
 
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     if (!isValidPassword)
       return NextResponse.json(
-        { error: 'Invalid username or password.' },
+        { error: 'Invalid username or password' },
         { status: 401 }
       );
 
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.log(`DB or password verification error: ${err}`);
     return NextResponse.json(
-      { error: 'Internal server error.' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.log(`DB/Session error: ${err}`);
     return NextResponse.json(
-      { error: 'Internal server error.' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
