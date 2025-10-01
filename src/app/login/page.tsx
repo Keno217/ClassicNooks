@@ -3,10 +3,31 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 export default function Login() {
   const router = useRouter();
 
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkLoggedIn = async () => {
+      try {
+        const res = await fetch('/api/me', { credentials: 'include' });
+        const data = await res.json();
+        
+        if (res.ok && data.user?.username) {
+          router.push('/');
+        }
+
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+      }
+    };
+    
+    checkLoggedIn();
+  }, []);
+
+  // Handle user login
   const loginUser = async (data: { user: string; password: string }) => {
     const res = await fetch('/api/login', {
       method: 'POST',
@@ -32,9 +53,11 @@ export default function Login() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
     const formData = new FormData(e.currentTarget);
-    const user = formData.get('user') as string;
+    let user = formData.get('user') as string;
     const password = formData.get('password') as string;
+    user = user.toLowerCase().trim();
 
     mutation.mutate({ user, password });
   }
