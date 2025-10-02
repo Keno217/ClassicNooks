@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
+  // Validate username and password
   if (user.length < 3 || user.length > 30)
     return NextResponse.json(
       { error: 'Username must be between 3 and 30 characters' },

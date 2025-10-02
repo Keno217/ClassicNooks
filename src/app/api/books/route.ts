@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   let searchInput: string | null = searchParams.get('search');
   let bookGenre: string | null = searchParams.get('genre');
 
+  // Validate and sanitize query parameters
   const lastId: number =
     !lastBookId || isNaN(Number(lastBookId)) ? 0 : Number(lastBookId);
 
@@ -149,7 +150,7 @@ export async function GET(request: NextRequest) {
       if (bookGenre)
         url.searchParams.set('genre', searchParams.get('genre') as string);
 
-      nextPage = `http://localhost:3000${
+      nextPage = `${
         url.pathname
       }?${url.searchParams.toString()}`;
     }
