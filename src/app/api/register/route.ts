@@ -5,7 +5,7 @@ import { ratelimit } from '@/lib/ratelimiter';
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate the amount of times a user can POST to this API
+    // Rate limiting
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
     const { success } = await ratelimit.limit(ip);
 
@@ -15,45 +15,66 @@ export async function POST(req: NextRequest) {
         { status: 429 }
       );
 
-    const { user, password } = await req.json();
+  } catch (err) {
+    console.log(`Rate limiter error: ${err}`);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+
+  let user: string, password: string;
+
+  try {
+    // Parse request body
+    const body = await req.json();
+    user = body.user;
+    password = body.password;
 
     if (!user || !password)
-      return NextResponse.json({ error: 'Missing fields.' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
-    if (user.length < 3 || user.length > 30)
-      return NextResponse.json(
-        { error: 'Username must be between 3 and 30 characters.' },
-        { status: 400 }
-      );
+  } catch (err) {
+    console.log(`Error parsing username/password: ${err}`);
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
 
-    if (password.length < 8 || password.length > 64)
-      return NextResponse.json(
-        { error: 'Password must be between 8 and 64 characters.' },
-        { status: 400 }
-      );
+  if (user.length < 3 || user.length > 30)
+    return NextResponse.json(
+      { error: 'Username must be between 3 and 30 characters' },
+      { status: 400 }
+    );
 
-    const usernameRegex = /^[A-Za-z0-9]+$/;
-    const username = user.toLowerCase().trim();
+  if (password.length < 8 || password.length > 64)
+    return NextResponse.json(
+      { error: 'Password must be between 8 and 64 characters' },
+      { status: 400 }
+    );
 
-    if (!usernameRegex.test(username))
-      return NextResponse.json(
-        { error: 'Username contains invalid characters.' },
-        { status: 400 }
-      );
+  const usernameRegex = /^[A-Za-z0-9]+$/;
+  user = user.toLowerCase().trim();
 
-    // Check if there is already a prexisting user with this username
+  if (!usernameRegex.test(user))
+    return NextResponse.json(
+      { error: 'Username contains invalid characters' },
+      { status: 400 }
+    );
+
+  try {
+    // DB query
     const { rows } = await pool.query(
       `
       SELECT username
       FROM users
       WHERE username = $1
       `,
-      [username]
+      [user]
     );
 
+    // Check if there is already a prexisting user with this username
     if (rows.length > 0)
       return NextResponse.json(
-        { error: 'Username already exists.' },
+        { error: 'Username already exists' },
         { status: 409 }
       );
 
@@ -64,18 +85,18 @@ export async function POST(req: NextRequest) {
       INSERT INTO users (username, password)
       VALUES ($1, $2)
       `,
-      [username, hashedPassword]
+      [user, hashedPassword]
     );
 
     return NextResponse.json(
-      { message: 'User registration successful.' },
+      { message: 'User registration successful' },
       { status: 201 }
     );
 
   } catch (err) {
-    console.log(`Error handling user registration: ${err}`);
+    console.log(`Error inserting user into DB: ${err}`);
     return NextResponse.json(
-      { error: 'Internal server error.' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
