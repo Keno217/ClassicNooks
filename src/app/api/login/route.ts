@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db.ts';
 import argon2 from 'argon2';
-import { ratelimit } from '@/lib/ratelimiter';
+import { authRateLimit } from '@/lib/ratelimiter';
 
 export async function POST(req: NextRequest) {
   let userId: string, user: string, password: string, captchaToken: string;
@@ -10,11 +10,11 @@ export async function POST(req: NextRequest) {
   try {
     // Rate limiting
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
-    const { success } = await ratelimit.limit(ip);
+    const { success } = await authRateLimit.limit(`login_${ip}`);
 
     if (!success)
       return NextResponse.json(
-        { error: 'Rate limit exceeded' },
+        { error: 'Too many requests' },
         { status: 429 }
       );
 

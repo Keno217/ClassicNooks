@@ -1,14 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db.ts';
 import { sanitizeInput } from '@/utils/sanitizeInput';
+import { defRateLimit, dailyRateLimit } from '@/lib/ratelimiter';
+import pool from '@/lib/db.ts';
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
   const DEFAULT_LIMIT: number = 100;
   const lastBookId: string | null = searchParams.get('lastId');
   const bookLimit: string | null = searchParams.get('limit');
   let searchInput: string | null = searchParams.get('search');
   let bookGenre: string | null = searchParams.get('genre');
+
+  try {
+      // Rate limiting
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
+      const { success: burstSuccess } = await defRateLimit.limit(`books_${ip}`);
+      const { success: dailySuccess } = await dailyRateLimit.limit(`books_${ip}`);
+  
+      if (!burstSuccess)
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+
+      if (!dailySuccess)
+        return NextResponse.json({ error: 'Daily request limit exceeded' }, { status: 429 });
+  
+    } catch (err) {
+      console.log(`Rate limiter error: ${err}`);
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
+    }
 
   // Validate and sanitize query parameters
   const lastId: number =
@@ -138,7 +159,7 @@ export async function GET(request: NextRequest) {
 
     // Only set a next link if the current page is full
     if (books.length === limit) {
-      const url = new URL(request.url);
+      const url = new URL(req.url);
       const nextId = books[books.length - 1].id;
       url.searchParams.set('lastId', String(nextId));
 
