@@ -2,12 +2,15 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function Register() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState('');
+  const captchaRef = useRef<ReCAPTCHA>(null);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -19,8 +22,9 @@ export default function Register() {
         if (res.ok && data.user?.username) {
           router.push('/');
         }
+
       } catch (err) {
-        console.error('Error fetching user data:', err);
+        console.log('Error fetching user data:', err);
       }
     };
 
@@ -56,9 +60,15 @@ export default function Register() {
     const formData = new FormData(e.currentTarget);
     const user = (formData.get('user') as string).toLowerCase().trim();
     const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
 
     if (password.length < 8 || password.length > 64) {
       setError('Password must be between 8 and 64 characters');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
       return;
     }
 
@@ -66,10 +76,12 @@ export default function Register() {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user, password }),
+        body: JSON.stringify({ user, password, captchaToken }),
       });
 
       if (!res.ok) {
+        setCaptchaToken('');
+        captchaRef.current?.reset();
         const err = await res.json();
         throw new Error(err.error || 'Registration failed. Please try again');
       }
@@ -84,6 +96,15 @@ export default function Register() {
     setStep(1);
     setError('');
     router.push('/login');
+  };
+
+  const handleCaptchaChange = (token: string | null) => {
+    if (token) setCaptchaToken(token);
+    else setCaptchaToken(''); // clears token if user fails captcha or it expires
+  };
+
+  const handleCaptchaExpired = () => {
+    setCaptchaToken('');
   };
 
   return (
@@ -120,15 +141,15 @@ export default function Register() {
             </div>
             {step === 1 ? (
               <>
+                {error && (
+                  <p className='text-sm text-red-500 text-center'>{error}</p>
+                )}
                 <button
                   type='submit'
                   className='w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-500/50'
                 >
                   Continue
                 </button>
-                {error && (
-                  <p className='text-sm text-red-500 text-center'>{error}</p>
-                )}
               </>
             ) : (
               <>
@@ -147,7 +168,30 @@ export default function Register() {
                     className='w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-300 transition-all duration-300 hover:shadow-sm'
                     placeholder='Enter your password'
                   />
-                  {/* TODO: Add confirm password field */}
+                </div>
+                <div className='space-y-2'>
+                  <label
+                    htmlFor='confirmPassword'
+                    className='block text-sm font-medium text-gray-700'
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    id='confirmPassword'
+                    type='password'
+                    name='confirmPassword'
+                    required
+                    className='w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-300 transition-all duration-300 hover:shadow-sm'
+                    placeholder='Confirm your password'
+                  />
+                </div>
+                <div className='flex justify-center'>
+                  <ReCAPTCHA
+                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                    onChange={handleCaptchaChange}
+                    onExpired={handleCaptchaExpired}
+                    ref={captchaRef}
+                  />
                 </div>
                 {error && (
                   <p className='text-sm text-red-500 text-center'>{error}</p>
