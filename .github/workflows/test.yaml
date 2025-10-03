@@ -29,8 +29,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run Frontend Tests
-        run: pnpm test __tests__/frontend
+      - name: Run Component(s) Tests
+        run: pnpm test __tests__/app/components
 
   backend-tests:
     name: Backend Tests
@@ -53,4 +53,4 @@ jobs:
         run: pnpm install
 
       - name: Run Backend Tests
-        run: pnpm test __tests__/backend
+        run: pnpm test __tests__/app/api
