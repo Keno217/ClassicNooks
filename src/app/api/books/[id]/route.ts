@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { defRateLimit, dailyRateLimit } from '@/lib/ratelimiter';
+import { getCache, setCache } from '@/lib/cache';
 import pool from '@/lib/db.ts';
 
 export async function GET(
@@ -7,6 +8,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const { id } = await params;
+  const TTL_SECONDS = 24 * 60 * 60; // 24 hrs
 
   try {
       // Rate limiting
@@ -44,6 +46,10 @@ export async function GET(
     );
   }
 
+  // Check cache
+  const cachedRes = await getCache(`book_${bookId}`);
+  if (cachedRes) return NextResponse.json(cachedRes, { status: 200 });
+
   try {
     const bookQuery = await pool.query(
       `
@@ -80,8 +86,8 @@ export async function GET(
       );
     }
 
+    await setCache(`book_${bookId}`, bookQuery.rows[0], TTL_SECONDS); // Cache for 24 hours
     return NextResponse.json(bookQuery.rows[0], { status: 200 });
-    
   } catch (err) {
     console.log(`Internal server error. ${err}`);
     return NextResponse.json(

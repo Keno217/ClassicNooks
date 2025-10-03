@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { defRateLimit, dailyRateLimit } from '@/lib/ratelimiter';
+import { getCache, setCache } from '@/lib/cache';
 import pool from '@/lib/db';
 
 export async function GET(
@@ -7,32 +8,40 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const { id } = await params;
-
-  try {
-      // Rate limiting
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
-      const { success: burstSuccess } = await defRateLimit.limit(`book_text_${ip}`);
-      const { success: dailySuccess } = await dailyRateLimit.limit(`book_text_${ip}`);
-  
-      if (!burstSuccess)
-        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
-
-      if (!dailySuccess)
-        return NextResponse.json({ error: 'Daily request limit exceeded' }, { status: 429 });
-  
-    } catch (err) {
-      console.log(`Rate limiter error: ${err}`);
-      return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
-      );
-    }
-
+  let readBookUrl: string, url: URL;
   const ALLOWED_HOSTS = new Set([
     'www.gutenberg.org',
     'gutenberg.org',
     'gutendex.com',
   ]);
+
+  try {
+    // Rate limiting
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
+    const { success: burstSuccess } = await defRateLimit.limit(
+      `book_text_${ip}`
+    );
+
+    const { success: dailySuccess } = await dailyRateLimit.limit(
+      `book_text_${ip}`
+    );
+
+    if (!burstSuccess)
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+
+    if (!dailySuccess)
+      return NextResponse.json(
+        { error: 'Daily request limit exceeded' },
+        { status: 429 }
+      );
+
+  } catch (err) {
+    console.log(`Rate limiter error: ${err}`);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 
   if (!id || isNaN(Number(id))) {
     return NextResponse.json(
@@ -50,7 +59,8 @@ export async function GET(
     );
   }
 
-  let readBookUrl: string;
+  const cacheRes = await getCache(`book_text_${bookId}`);
+  if (cacheRes) return NextResponse.json(cacheRes, { status: 200 });
 
   try {
     const { rows } = await pool.query(
@@ -79,17 +89,14 @@ export async function GET(
     readBookUrl = rows[0].book;
   } catch (err) {
     console.log(`DB error. ${err}`);
-
     return NextResponse.json(
       { error: 'Internal server error.' },
       { status: 500 }
     );
   }
 
-  /* Validate url */
-  let url: URL;
-
   try {
+    // Validate url
     url = new URL(readBookUrl);
   } catch (err) {
     return NextResponse.json({ error: 'Invalid text URL.' }, { status: 422 });
@@ -117,11 +124,13 @@ export async function GET(
 
     /* TODO: Parse text before sending */
 
+    // Set Cache once you finish TODO
+
     return new NextResponse(text, {
       status: 200,
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
-    
+
   } catch (err) {
     console.log(err);
     return NextResponse.json(

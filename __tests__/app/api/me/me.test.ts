@@ -57,9 +57,9 @@ describe('GET /api/me', () => {
     expect(res.status).toBe(200);
   });
 
-  test('returns 500 on DB error', async () => {
+  test('returns 500 on server error', async () => {
     const req = createRequestWithCookie('bad-session');
-    mockQuery.mockRejectedValueOnce(new Error('DB down'));
+    mockQuery.mockRejectedValueOnce(new Error('Server down'));
 
     const res = await GET(req);
     const data = await res.json();

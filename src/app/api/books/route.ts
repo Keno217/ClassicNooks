@@ -1,35 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sanitizeInput } from '@/utils/sanitizeInput';
 import { defRateLimit, dailyRateLimit } from '@/lib/ratelimiter';
+import { getCache, setCache } from '@/lib/cache';
 import pool from '@/lib/db.ts';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const DEFAULT_LIMIT: number = 100;
+  const TTL_SECONDS = 15 * 60; // 15 minutes
   const lastBookId: string | null = searchParams.get('lastId');
   const bookLimit: string | null = searchParams.get('limit');
   let searchInput: string | null = searchParams.get('search');
   let bookGenre: string | null = searchParams.get('genre');
 
   try {
-      // Rate limiting
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
-      const { success: burstSuccess } = await defRateLimit.limit(`books_${ip}`);
-      const { success: dailySuccess } = await dailyRateLimit.limit(`books_${ip}`);
-  
-      if (!burstSuccess)
-        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    // Rate limiting
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
+    const { success: burstSuccess } = await defRateLimit.limit(`books_${ip}`);
+    const { success: dailySuccess } = await dailyRateLimit.limit(`books_${ip}`);
 
-      if (!dailySuccess)
-        return NextResponse.json({ error: 'Daily request limit exceeded' }, { status: 429 });
-  
-    } catch (err) {
-      console.log(`Rate limiter error: ${err}`);
+    if (!burstSuccess)
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+
+    if (!dailySuccess)
       return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
+        { error: 'Daily request limit exceeded' },
+        { status: 429 }
       );
-    }
+
+  } catch (err) {
+    console.log(`Rate limiter error: ${err}`);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 
   // Validate and sanitize query parameters
   const lastId: number =
@@ -52,6 +57,10 @@ export async function GET(req: NextRequest) {
 
   searchInput = sanitizeInput(searchInput ?? '');
   bookGenre = sanitizeInput(bookGenre ?? '');
+
+  const cacheKey = `books_${lastId}_${limit}_${searchInput}_${bookGenre}`;
+  const cachedRes = await getCache(cacheKey);
+  if (cachedRes) return NextResponse.json(cachedRes, { status: 200 });
 
   try {
     const bookQuery = await pool.query(
@@ -171,22 +180,19 @@ export async function GET(req: NextRequest) {
       if (bookGenre)
         url.searchParams.set('genre', searchParams.get('genre') as string);
 
-      nextPage = `${
-        url.pathname
-      }?${url.searchParams.toString()}`;
+      nextPage = `${url.pathname}?${url.searchParams.toString()}`;
     }
 
-    return NextResponse.json(
-      {
-        page: currentPage,
-        totalPages: totalPages,
-        books: totalBookCount,
-        next: nextPage,
-        results: books,
-      },
-      { status: 200 }
-    );
-    
+    const responseData = {
+      page: currentPage,
+      totalPages: totalPages,
+      books: totalBookCount,
+      next: nextPage,
+      results: books,
+    };
+
+    await setCache(cacheKey, responseData, TTL_SECONDS);
+    return NextResponse.json(responseData, { status: 200 });
   } catch (err) {
     console.log(`DB query failed: ${err}`);
     return NextResponse.json(
