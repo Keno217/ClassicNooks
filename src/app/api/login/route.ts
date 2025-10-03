@@ -4,6 +4,9 @@ import argon2 from 'argon2';
 import { ratelimit } from '@/lib/ratelimiter';
 
 export async function POST(req: NextRequest) {
+  let userId: string, user: string, password: string, captchaToken: string;
+  const secret = process.env.RECAPTCHA_SECRET_KEY;
+
   try {
     // Rate limiting
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
@@ -23,20 +26,45 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let userId: string, user: string, password: string;
-
   try {
     // Parse request body
     const body = await req.json();
     user = body.user;
     password = body.password;
+    captchaToken = body.captchaToken;
 
     if (!user || !password)
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
+    if (!captchaToken)
+      return NextResponse.json(
+        { error: 'Missing captcha token' },
+        { status: 400 }
+      );
+
   } catch (err) {
-    console.log(`Error parsing username/password: ${err}`);
+    console.log(`Error parsing username/password/captcha-token: ${err}`);
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  try {
+    // Verify reCAPTCHA token
+    const captchaRes = await fetch(
+      `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${captchaToken}`,
+      { method: 'POST' }
+    );
+
+    const data = await captchaRes.json();
+
+    if (!data.success)
+      return NextResponse.json({ error: 'reCAPTCHA failed' }, { status: 400 });
+    
+  } catch (err) {
+    console.log(`Error verifying reCAPTCHA: ${err}`);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 
   try {
@@ -80,7 +108,7 @@ export async function POST(req: NextRequest) {
     // Create session & send cookie
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 6 * 60 * 60 * 1000);
-
+    
     const { rows } = await pool.query(
       `
       INSERT INTO sessions (user_id, expires_at)
@@ -100,7 +128,7 @@ export async function POST(req: NextRequest) {
     response.cookies.set('session', sessionId, {
       httpOnly: true,
       secure: false /* true */,
-      sameSite: 'lax',
+      sameSite: 'lax', /* none TODO: Add CRSF protections later before deployment */
       /* domain: '.BookWorm.com', */
       maxAge: 6 * 60 * 60,
     });

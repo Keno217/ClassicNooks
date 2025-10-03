@@ -3,10 +3,13 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function Login() {
   const router = useRouter();
+  const [captchaToken, setCaptchaToken] = useState('');
+  const captchaRef = useRef<ReCAPTCHA>(null);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -14,7 +17,7 @@ export default function Login() {
       try {
         const res = await fetch('/api/me', { credentials: 'include' });
         const data = await res.json();
-        
+
         if (res.ok && data.user?.username) {
           router.push('/');
         }
@@ -23,12 +26,12 @@ export default function Login() {
         console.error('Error fetching user data:', err);
       }
     };
-    
+
     checkLoggedIn();
   }, []);
 
   // Handle user login
-  const loginUser = async (data: { user: string; password: string }) => {
+  const loginUser = async (data: { user: string; password: string; captchaToken: string }) => {
     const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -37,6 +40,8 @@ export default function Login() {
     });
 
     if (!res.ok) {
+      setCaptchaToken('');
+      captchaRef.current?.reset();
       const err = await res.json();
       throw new Error(err.error || 'Login failed');
     }
@@ -55,12 +60,20 @@ export default function Login() {
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
-    let user = formData.get('user') as string;
+    const user = (formData.get('user') as string).toLowerCase().trim();
     const password = formData.get('password') as string;
-    user = user.toLowerCase().trim();
 
-    mutation.mutate({ user, password });
+    mutation.mutate({ user, password, captchaToken });
   }
+
+  const handleCaptchaChange = (token: string | null) => {
+    if (token) setCaptchaToken(token);
+    else setCaptchaToken(''); // clears token if user fails captcha or it expires
+  };
+
+  const handleCaptchaExpired = () => {
+    setCaptchaToken('');
+  };
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4'>
@@ -103,6 +116,14 @@ export default function Login() {
                 required
                 className='w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-300 transition-all duration-300 hover:shadow-sm'
                 placeholder='Enter your password'
+              />
+            </div>
+            <div className='flex justify-center'>
+              <ReCAPTCHA
+                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                onChange={handleCaptchaChange}
+                onExpired={handleCaptchaExpired}
+                ref={captchaRef}
               />
             </div>
             {mutation.isError && (

@@ -4,6 +4,10 @@ import argon2 from 'argon2';
 import { ratelimit } from '@/lib/ratelimiter';
 
 export async function POST(req: NextRequest) {
+  let user: string, password: string, captchaToken: string;
+  const secret = process.env.RECAPTCHA_SECRET_KEY;
+  const usernameRegex = /^[A-Za-z0-9]+$/;
+
   try {
     // Rate limiting
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
@@ -23,20 +27,45 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let user: string, password: string;
-
   try {
     // Parse request body
     const body = await req.json();
     user = body.user;
     password = body.password;
+    captchaToken = body.captchaToken;
 
     if (!user || !password)
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
+    if (!captchaToken)
+      return NextResponse.json(
+        { error: 'Missing captcha token' },
+        { status: 400 }
+      );
+
   } catch (err) {
-    console.log(`Error parsing username/password: ${err}`);
+    console.log(`Error parsing username/password/captcha-token: ${err}`);
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  try {
+    // Verify reCAPTCHA token
+    const captchaRes = await fetch(
+      `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${captchaToken}`,
+      { method: 'POST' }
+    );
+
+    const data = await captchaRes.json();
+
+    if (!data.success)
+      return NextResponse.json({ error: 'reCAPTCHA failed' }, { status: 400 });
+
+  } catch (err) {
+    console.log(`Error verifying reCAPTCHA: ${err}`);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 
   // Validate username and password
@@ -52,7 +81,6 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
 
-  const usernameRegex = /^[A-Za-z0-9]+$/;
   user = user.toLowerCase().trim();
 
   if (!usernameRegex.test(user))
@@ -93,7 +121,7 @@ export async function POST(req: NextRequest) {
       { message: 'User registration successful' },
       { status: 201 }
     );
-
+    
   } catch (err) {
     console.log(`Error inserting user into DB: ${err}`);
     return NextResponse.json(
