@@ -126,8 +126,7 @@ export async function POST(req: NextRequest) {
     response.cookies.set('session', sessionId, {
       httpOnly: true,
       secure: false /* true */,
-      sameSite:
-        'lax' /* none TODO: Add CRSF protections later before deployment */,
+      sameSite: 'lax' /* none TODO: Add CRSF protections later before deployment */,
       /* domain: '.bookworm.com', */
       maxAge: 6 * 60 * 60,
     });
