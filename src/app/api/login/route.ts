@@ -13,10 +13,7 @@ export async function POST(req: NextRequest) {
     const { success } = await authRateLimit.limit(`login_${ip}`);
 
     if (!success)
-      return NextResponse.json(
-        { error: 'Too many requests' },
-        { status: 429 }
-      );
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 
   } catch (err) {
     console.log(`Rate limiter error: ${err}`);
@@ -108,17 +105,18 @@ export async function POST(req: NextRequest) {
     // Create session & send cookie
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 6 * 60 * 60 * 1000);
-    
+
     const { rows } = await pool.query(
       `
       INSERT INTO sessions (user_id, expires_at)
       VALUES ($1, $2)
-      RETURNING id
+      RETURNING id, csrf_token;
       `,
       [userId, expiresAt]
     );
 
     const sessionId = rows[0].id;
+    const csrfToken = rows[0].csrf_token;
 
     const response = NextResponse.json(
       { message: 'Login successful' },
@@ -128,8 +126,17 @@ export async function POST(req: NextRequest) {
     response.cookies.set('session', sessionId, {
       httpOnly: true,
       secure: false /* true */,
-      sameSite: 'lax', /* none TODO: Add CRSF protections later before deployment */
-      /* domain: '.BookWorm.com', */
+      sameSite:
+        'lax' /* none TODO: Add CRSF protections later before deployment */,
+      /* domain: '.bookworm.com', */
+      maxAge: 6 * 60 * 60,
+    });
+
+    response.cookies.set('csrf', csrfToken, {
+      httpOnly: false,
+      secure: false /* true */,
+      sameSite: 'none',
+      /* domain: '.bookworm.com', */
       maxAge: 6 * 60 * 60,
     });
 
