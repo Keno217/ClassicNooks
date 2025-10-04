@@ -45,7 +45,16 @@ CREATE TABLE users (
 -- sessions table
 CREATE TABLE sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  csrf_token UUID DEFAULT gen_random_uuid() NOT NULL,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   created_at TIMESTAMP DEFAULT NOW(),
   expires_at TIMESTAMP NOT NULL
+);
+
+-- favorite books table
+CREATE TABLE user_favorites (
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  book_id INT REFERENCES books(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  PRIMARY KEY (user_id, book_id)
 );
