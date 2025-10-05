@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactQueryProvider from '@/utils/providers/ReactQueryProvider.tsx';
+import { AuthProvider } from '@/context/AuthContext';
 import './globals.css';
 
 export const metdata = {
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body>
-        <ReactQueryProvider>{children}</ReactQueryProvider>
+        <AuthProvider>
+          <ReactQueryProvider>{children}</ReactQueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );
