@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
     if (!data.success)
       return NextResponse.json({ error: 'reCAPTCHA failed' }, { status: 400 });
-    
+
   } catch (err) {
     console.log(`Error verifying reCAPTCHA: ${err}`);
     return NextResponse.json(
@@ -102,6 +102,16 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // Delete previous sessions
+    await pool.query(
+      `
+      DELETE FROM sessions
+      WHERE user_id = $1
+        AND expires_at < NOW();
+      `,
+      [userId]
+    );
+
     // Create session & send cookie
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 6 * 60 * 60 * 1000);
@@ -110,13 +120,12 @@ export async function POST(req: NextRequest) {
       `
       INSERT INTO sessions (user_id, expires_at)
       VALUES ($1, $2)
-      RETURNING id, csrf_token;
+      RETURNING id;
       `,
       [userId, expiresAt]
     );
 
     const sessionId = rows[0].id;
-    const csrfToken = rows[0].csrf_token;
 
     const response = NextResponse.json(
       { message: 'Login successful' },
@@ -127,17 +136,12 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: false /* true */,
       sameSite: 'lax' /* none TODO: Add CRSF protections later before deployment */,
-      /* domain: '.bookworm.com', */
+      path: '/',
       maxAge: 6 * 60 * 60,
     });
 
-    response.cookies.set('csrf', csrfToken, {
-      httpOnly: false,
-      secure: false /* true */,
-      sameSite: 'none',
-      /* domain: '.bookworm.com', */
-      maxAge: 6 * 60 * 60,
-    });
+    // Take out all of the fetch requests to api/me on frontend pages, only one is needed with usecontext
+    // Set up CORS/CSP headers
 
     return response;
   } catch (err) {

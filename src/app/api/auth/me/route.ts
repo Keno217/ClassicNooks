@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
     if (!success)
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
-
+    
   } catch (err) {
     console.log(`Rate limiter error: ${err}`);
     return NextResponse.json(
@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
     const { rows } = await pool.query(
       `
         SELECT users.id,
-        users.username
+        users.username,
+        sessions.csrf_token
         FROM users
         INNER JOIN sessions
           ON sessions.user_id = users.id
@@ -42,10 +43,13 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { user: { id: rows[0].id, username: rows[0].username } },
+      {
+        user: { id: rows[0].id, username: rows[0].username },
+        csrfToken: rows[0].csrf_token,
+      },
       { status: 200 }
     );
-    
+
   } catch (err) {
     console.error('DB session query error:', err);
     return NextResponse.json(
