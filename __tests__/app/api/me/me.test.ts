@@ -1,7 +1,7 @@
 /**
  * @jest-environment @edge-runtime/jest-environment
  */
-import { GET } from '@/app/api/me/route';
+import { GET } from '@/app/api/auth/me/route';
 import { NextRequest } from 'next/server';
 
 const mockQuery = jest.fn();
@@ -10,6 +10,12 @@ jest.mock('@/lib/db', () => ({
   __esModule: true,
   default: {
     query: (...args: any[]) => mockQuery(...args),
+  },
+}));
+
+jest.mock('@/lib/ratelimiter', () => ({
+  defRateLimit: {
+    limit: jest.fn(() => Promise.resolve({ success: true })),
   },
 }));
 
@@ -22,6 +28,10 @@ describe('GET /api/me', () => {
     return {
       cookies: {
         get: jest.fn(() => (value ? { value } : undefined)),
+      },
+
+      headers: {
+        get: jest.fn(() => '127.0.0.1'),
       },
     } as unknown as NextRequest;
   }
