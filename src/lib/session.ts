@@ -10,7 +10,8 @@ export default async function getUserFromSession(req: NextRequest) {
     const { rows } = await pool.query(
       `
         SELECT users.id,
-        users.username
+        users.username,
+        sessions.csrf_token
         FROM users
         INNER JOIN sessions
           ON sessions.user_id = users.id
@@ -24,7 +25,7 @@ export default async function getUserFromSession(req: NextRequest) {
       return null;
     }
 
-    return { id: rows[0].id, username: rows[0].username };
+    return { id: rows[0].id, username: rows[0].username, csrfToken: rows[0].csrf_token };
     
   } catch (err) {
     console.log('DB session query error:', err);
