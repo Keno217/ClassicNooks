@@ -25,6 +25,7 @@ export async function GET(
     );
   }
 
+  // Validate/sanitize input
   if (!id || isNaN(Number(id))) {
     return NextResponse.json(
       { error: 'Invalid book ID, it must be a number.' },
@@ -41,6 +42,7 @@ export async function GET(
     );
   }
 
+  // Check session
   const user = await getUserFromSession(req);
 
   if (!user)
@@ -49,13 +51,10 @@ export async function GET(
   try {
     const { rows } = await pool.query(
       `
-      SELECT b.id
-      FROM user_favorites uf
-      INNER JOIN books b
-        ON uf.book_id = b.id
-      WHERE uf.user_id = $1
-        AND b.id = $2
-      ORDER BY uf.created_at DESC
+      SELECT 1
+      FROM user_favorites
+      WHERE user_id = $1
+        AND book_id = $2
       `,
       [user.id, bookId]
     );
@@ -70,4 +69,142 @@ export async function GET(
   }
 }
 
-export async function POST(req: NextRequest) {}
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = await params;
+
+  try {
+    // Rate limiting
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
+    const { success } = await defRateLimit.limit(`favorites_${ip}`);
+
+    if (!success)
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+
+  } catch (err) {
+    console.log(`Rate limiter error: ${err}`);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+
+  // Validate/sanitize input
+  if (!id || isNaN(Number(id))) {
+    return NextResponse.json(
+      { error: 'Invalid book ID, it must be a number.' },
+      { status: 400 }
+    );
+  }
+
+  const bookId = Number(id);
+
+  if (!Number.isSafeInteger(bookId) || bookId <= 0 || bookId > 2_147_483_647) {
+    return NextResponse.json(
+      { error: 'Invalid Book ID. Number is out of range.' },
+      { status: 400 }
+    );
+  }
+
+  // Check session & CSRF token
+  const user = await getUserFromSession(req);
+  const csrfHeader = req.headers.get('X-CSRF-Token');
+
+  if (!user)
+    return NextResponse.json({ error: 'User not authorized' }, { status: 401 });
+
+  if (!csrfHeader || csrfHeader !== user.csrfToken) {
+    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+  }
+
+  try {
+    await pool.query(
+      `
+      INSERT INTO user_favorites (user_id, book_id)
+      VALUES ($1, $2)
+      ON CONFLICT (user_id, book_id) DO NOTHING
+      `,
+      [user.id, bookId]
+    );
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (err) {
+    console.log('DB error adding book into favorites:', err);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = await params;
+
+  try {
+    // Rate limiting
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
+    const { success } = await defRateLimit.limit(`favorites_${ip}`);
+
+    if (!success)
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+
+  } catch (err) {
+    console.log(`Rate limiter error: ${err}`);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+
+  // Validate/sanitize input
+  if (!id || isNaN(Number(id))) {
+    return NextResponse.json(
+      { error: 'Invalid book ID, it must be a number.' },
+      { status: 400 }
+    );
+  }
+
+  const bookId = Number(id);
+
+  if (!Number.isSafeInteger(bookId) || bookId <= 0 || bookId > 2_147_483_647) {
+    return NextResponse.json(
+      { error: 'Invalid Book ID. Number is out of range.' },
+      { status: 400 }
+    );
+  }
+
+  // Check session & CSRF token
+  const user = await getUserFromSession(req);
+  const csrfHeader = req.headers.get('X-CSRF-Token');
+
+  if (!user)
+    return NextResponse.json({ error: 'User not authorized' }, { status: 401 });
+
+  if (!csrfHeader || csrfHeader !== user.csrfToken) {
+    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+  }
+
+  try {
+    await pool.query(
+      `
+      DELETE FROM user_favorites
+      WHERE user_id = $1
+        AND book_id = $2;
+      `,
+      [user.id, bookId]
+    );
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (err) {
+    console.log('DB error removing book from favorites:', err);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
