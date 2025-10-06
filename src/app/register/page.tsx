@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function Register() {
@@ -11,25 +12,12 @@ export default function Register() {
   const [error, setError] = useState('');
   const [captchaToken, setCaptchaToken] = useState('');
   const captchaRef = useRef<ReCAPTCHA>(null);
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     // Check if user is already logged in
-    const checkLoggedIn = async () => {
-      try {
-        const res = await fetch('/api/me', { credentials: 'include' });
-        const data = await res.json();
-
-        if (res.ok && data.user?.username) {
-          router.push('/');
-        }
-
-      } catch (err) {
-        console.log('Error fetching user data:', err);
-      }
-    };
-
-    checkLoggedIn();
-  }, []);
+    if (!loading && user) router.push('/');
+  }, [loading, user, router]);
 
   // Step 1: Validate username
   function handleUsernameValidation(e: React.FormEvent<HTMLFormElement>) {
@@ -73,7 +61,7 @@ export default function Register() {
     }
 
     try {
-      const res = await fetch('/api/register', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user, password, captchaToken }),
@@ -100,7 +88,7 @@ export default function Register() {
 
   const handleCaptchaChange = (token: string | null) => {
     if (token) setCaptchaToken(token);
-    else setCaptchaToken(''); // clears token if user fails captcha or it expires
+    else setCaptchaToken('');
   };
 
   const handleCaptchaExpired = () => {

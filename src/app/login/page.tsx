@@ -4,35 +4,23 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState, useRef } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function Login() {
   const router = useRouter();
   const [captchaToken, setCaptchaToken] = useState('');
   const captchaRef = useRef<ReCAPTCHA>(null);
+  const { user, loading, refresh } = useAuth();
 
   useEffect(() => {
     // Check if user is already logged in
-    const checkLoggedIn = async () => {
-      try {
-        const res = await fetch('/api/me', { credentials: 'include' });
-        const data = await res.json();
-
-        if (res.ok && data.user?.username) {
-          router.push('/');
-        }
-
-      } catch (err) {
-        console.error('Error fetching user data:', err);
-      }
-    };
-
-    checkLoggedIn();
-  }, []);
+    if (user && !loading) router.push('/');
+  }, [loading, user, router]);
 
   // Handle user login
   const loginUser = async (data: { user: string; password: string; captchaToken: string }) => {
-    const res = await fetch('/api/login', {
+    const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -51,7 +39,8 @@ export default function Login() {
 
   const mutation = useMutation({
     mutationFn: loginUser,
-    onSuccess: () => {
+    onSuccess: async () => {
+      await refresh();
       router.push('/');
     },
   });
@@ -96,7 +85,7 @@ export default function Login() {
               <input
                 id='user'
                 name='user'
-                type='user'
+                type='text'
                 required
                 className='w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-300 transition-all duration-300 hover:shadow-sm'
                 placeholder='Enter your Username'
