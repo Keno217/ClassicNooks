@@ -2,9 +2,9 @@
 
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import BookCard from './BookCard.tsx';
-import type { Book } from '@/types/book';
+import type { Book, GetBookApiResponse } from '@/types/book';
 
 export default function BookRail({
   title,
@@ -17,33 +17,29 @@ export default function BookRail({
   const [showRightArrow, setShowRightArrow] = useState(false);
   const bookRailRef = useRef<HTMLDivElement>(null);
 
-  const fetchAllBooks = async (url: string): Promise<Book[]> => {
-    let nextPage: string | null = url;
-    let allBooks: Book[] = [];
-    let totalBooks = 0;
-
-    while (nextPage) {
-      if (totalBooks >= 1000) break;
-      const res = await fetch(nextPage);
-      const data: {
-        page: string;
-        totalPages: string;
-        books: string; // This is book count
-        next: string | null;
-        results: Book[];
-      } = await res.json();
-      allBooks.push(...data.results);
-      totalBooks += data.results.length;
-      nextPage = data.next;
-    }
-
-    return allBooks;
-  };
-
-  const { data: books = [] } = useQuery({
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isError,
+    error,
+  } = useInfiniteQuery({
     queryKey: ['books', url],
-    queryFn: () => fetchAllBooks(url),
+    queryFn: async ({ pageParam }: { pageParam?: string }) => {
+      const fetchUrl = pageParam || url;
+      const res = await fetch(fetchUrl);
+      if (!res.ok) throw new Error('Failed to fetch books');
+      const data: GetBookApiResponse = await res.json();
+      return data;
+    },
+
+    getNextPageParam: (lastPage) => lastPage.next ?? undefined,
+    initialPageParam: url,
   });
+
+  // TODO: Implement error handling, also add stats about bookrail, maybe more info
+  const books: Book[] = data?.pages.flatMap((page) => page.results) ?? [];
 
   const updateArrowVisibility = () => {
     const container = bookRailRef.current;
@@ -86,11 +82,20 @@ export default function BookRail({
     }
   };
 
-  const scrollRight = () => {
+  const scrollRight = async () => {
     const container = bookRailRef.current;
+    if (!container) return;
+
+    const halfway = container.scrollWidth / 2;
 
     if (container) {
       container.scrollBy({ left: 400, behavior: 'smooth' });
+
+      if (
+        hasNextPage &&
+        container.scrollLeft + container.clientWidth >= halfway
+      )
+        await fetchNextPage();
     }
   };
 
