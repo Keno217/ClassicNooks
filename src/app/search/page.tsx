@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
@@ -46,8 +46,7 @@ export default function searchPage() {
       const data: GetBookApiResponse = await res.json();
       return data;
     } catch (err) {
-      console.log(`Error: ${err}`);
-      return null;
+      throw new Error(`Failed to fetch book relating to ${searchQuery}: ${err}`);
     }
   };
 
@@ -55,6 +54,7 @@ export default function searchPage() {
     queryKey: ['book', searchQuery, currentPage],
     queryFn: fetchBooks,
     enabled: searchQuery !== '' && currentPage !== null,
+    placeholderData: keepPreviousData,
   });
 
   // Derived values
