@@ -4,7 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar.tsx';
 import BookRail from '@/components/BookRail.tsx';
 import allGenres from '@/data/genres.ts';
@@ -14,6 +15,8 @@ export default function BookInfo({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const [isFavorited, setIsFavorited] = useState(false);
+  const { user, csrfToken } = useAuth();
   const pathName = usePathname();
   const { id } = use(params);
   let bookId = Number(id);
@@ -21,6 +24,25 @@ export default function BookInfo({
   if (!bookId || isNaN(Number(bookId))) {
     bookId = 1;
   }
+
+  useEffect(() => {
+    const getFavoriteStatus = async () => {
+      try {
+        const resFav = await fetch(`/api/books/${bookId}/favorite-status`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (!resFav.ok) return;
+        const favData = await resFav.json();
+        setIsFavorited(favData.isFavorited);
+      } catch (err) {
+        console.log('Error fetching user/favorites:', err);
+      }
+    };
+
+    getFavoriteStatus();
+  }, []);
 
   const fetchBook = async () => {
     try {
@@ -44,6 +66,33 @@ export default function BookInfo({
     queryKey: ['book', bookId],
     queryFn: fetchBook,
   });
+
+  const handleFavorite = async () => {
+    if (!user) return;
+
+    try {
+      const method = isFavorited ? 'DELETE' : 'POST';
+
+      const res = await fetch(`/api/books/${bookId}/favorite-status`, {
+        method: method,
+        credentials: 'include',
+        body: JSON.stringify({ bookId }),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken ?? '',
+        },
+      });
+
+      if (!res.ok) {
+        console.log('Failed to favorite/unfavorite book');
+        return;
+      }
+
+      setIsFavorited((prevIsFavorite) => !prevIsFavorite);
+    } catch (err) {
+      console.log(`Error adding book#${bookId} to favorites:`, err);
+    }
+  };
 
   const authorsName =
     book && book.authors
@@ -71,7 +120,7 @@ export default function BookInfo({
   ));
 
   const isGenre = genres.length > 0;
-  const readBook = book?.book ? book.book : pathName;
+  const readBook = book?.book ? book.book : pathName; // TODO: make link known if it doesnt work
 
   /* 
     TODO: Convert all img to Image component for optimization later
@@ -123,22 +172,33 @@ export default function BookInfo({
                   📖 Read Now
                 </Link>
                 <div className='flex items-center gap-3'>
-                  <button className='cursor-pointer group p-4 bg-white hover:bg-red-50 border-2 border-gray-200 hover:border-red-300 rounded-xl transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-red-500/20'>
+                  <button
+                    className='cursor-pointer group p-4 bg-white hover:bg-red-50 border-2 border-gray-200 hover:border-red-300 rounded-xl transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-red-500/20'
+                    onClick={handleFavorite}
+                  >
                     <Image
-                      src='/icons/heartIcon.png'
+                      src={
+                        isFavorited
+                          ? '/icons/redHeartIcon.png'
+                          : '/icons/blackHeartIcon.png'
+                      }
                       alt='Add to Favorites'
                       width='28'
                       height='28'
                       className='group-hover:scale-110 transition-transform duration-200'
                     />
                   </button>
-                  <button className='cursor-pointer group p-4 bg-white hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-300 rounded-xl transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-500/20'>
+                  <a
+                    href={book.book}
+                    download
+                    className='cursor-pointer group p-4 bg-white hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-300 rounded-xl transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-500/20'
+                  >
                     <img
                       src='https://cdn-icons-png.flaticon.com/512/0/532.png'
                       alt='Download eBook'
                       className='w-7 h-7 group-hover:scale-110 transition-transform duration-200'
                     />
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>
