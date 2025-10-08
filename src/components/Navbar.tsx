@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import type { Book } from '@/types/book';
 
 export default function Navbar() {
@@ -14,6 +15,7 @@ export default function Navbar() {
   const [debouncedSearchBook] = useDebounce(searchBook, 350);
   const pathName = usePathname();
   const router = useRouter();
+  const { user } = useAuth();
 
   // Close Navbar & Set scrolling back on after traversing page
   useEffect(() => {
@@ -29,7 +31,7 @@ export default function Navbar() {
 
     try {
       const res = await fetch(
-        `http://localhost:3000/api/books?search=${queryParam}&limit=${MAX_LIMIT}`
+        `/api/books?search=${queryParam}&limit=${MAX_LIMIT}`
       );
 
       if (!res.ok)
@@ -71,6 +73,11 @@ export default function Navbar() {
 
     if (queryParam) router.push(`/search?query=${queryParam}`);
   }
+
+  const usernameElement =
+    user?.username && user.username.length > 10
+      ? <span>{`${user.username.slice(0, 10)}.`}</span>
+      : <span>{user?.username}</span>;
 
   const bookElements = books.map((book: Book) => (
     <Link
@@ -138,7 +145,7 @@ export default function Navbar() {
             </ul>
           </nav>
         </div>
-        <div className='hidden sm:flex justify-end gap-4'>
+        <div className='hidden sm:flex justify-end items-center gap-4'>
           <form onSubmit={handleSubmit} className='flex flex-col relative'>
             <div className='flex gap-2 bg-gradient-to-r from-gray-50 to-gray-100 py-3 px-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-300'>
               <button
@@ -168,7 +175,7 @@ export default function Navbar() {
               </div>
             )}
           </form>
-          <div className='flex-shrink-0 relative group flex flex-col justify-center'>
+          <div className='flex-shrink-0 relative group flex flex-col justify-center items-center'>
             <Image
               src='/icons/userIcon.png'
               alt='Profile'
@@ -176,7 +183,7 @@ export default function Navbar() {
               height='40'
               className=''
             />
-            {/* Maybe add a filter? */}
+            {usernameElement}
           </div>
         </div>
       </header>
