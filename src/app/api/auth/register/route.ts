@@ -1,31 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db.ts';
 import argon2 from 'argon2';
-import { authRateLimit } from '@/lib/ratelimiter';
 
 export async function POST(req: NextRequest) {
   let user: string, password: string, captchaToken: string;
   const secret = process.env.RECAPTCHA_SECRET_KEY;
   const usernameRegex = /^[A-Za-z0-9]+$/;
-
-  try {
-    // Rate limiting
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
-    const { success } = await authRateLimit.limit(`register_${ip}`);
-
-    if (!success)
-      return NextResponse.json(
-        { error: 'Too many requests' },
-        { status: 429 }
-      );
-
-  } catch (err) {
-    console.log(`Rate limiter error: ${err}`);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
 
   try {
     // Parse request body
