@@ -1,27 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db.ts';
 import argon2 from 'argon2';
-import { authRateLimit } from '@/lib/ratelimiter';
+import { authDailyLimit, authShortLimit } from '@/lib/ratelimiter';
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   let userId: string, user: string, password: string, captchaToken: string;
   const secret = process.env.RECAPTCHA_SECRET_KEY;
-
-  try {
-    // Rate limiting
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
-    const { success } = await authRateLimit.limit(`login_${ip}`);
-
-    if (!success)
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
-
-  } catch (err) {
-    console.log(`Rate limiter error: ${err}`);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
 
   try {
     // Parse request body
@@ -29,20 +13,42 @@ export async function POST(req: NextRequest) {
     user = body.user;
     password = body.password;
     captchaToken = body.captchaToken;
-
-    if (!user || !password)
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
-
-    if (!captchaToken)
-      return NextResponse.json(
-        { error: 'Missing captcha token' },
-        { status: 400 }
-      );
-
   } catch (err) {
     console.log(`Error parsing username/password/captcha-token: ${err}`);
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
+
+  if (!user)
+    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+
+  try {
+    // Rate limiting
+    user = user.toLowerCase().trim();
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
+    const key: string = user ? user : ip; // Prevent bruteforcing off different IPs
+    const { success: burstSuccessUsername } = await authShortLimit.limit(`auth_login_${user}`);
+    const { success: dailySuccessUsername } = await authDailyLimit.limit(`auth_login_${user}`);
+    const { success: burstSuccessUserIp } = await authShortLimit.limit(`auth_login_${ip}`);
+    const { success: dailySuccessUserIp } = await authDailyLimit.limit(`auth_login_${ip}`);
+
+    if (!burstSuccessUserIp || !burstSuccessUsername)
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+
+    if (!dailySuccessUserIp || !dailySuccessUsername)
+      return NextResponse.json(
+        { error: 'Daily requests exceeded' },
+        { status: 429 }
+      );
+
+  } catch (err) {
+    console.log(`Rate limiter error: ${err}`);
+  }
+
+  if (!captchaToken)
+    return NextResponse.json(
+      { error: 'Missing captcha token' },
+      { status: 400 }
+    );
 
   try {
     // Verify reCAPTCHA token
@@ -64,9 +70,24 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Validate username & password
+  if (!password)
+    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+
+  if (user.length < 3 || user.length > 30)
+    return NextResponse.json(
+      { error: 'Invalid username or password' },
+      { status: 400 }
+    );
+
+  if (password.length < 8 || password.length > 64)
+    return NextResponse.json(
+      { error: 'Invalid username or password' },
+      { status: 400 }
+    );
+
   try {
     // Validate username & password
-    user = user.toLowerCase().trim();
     const { rows } = await pool.query(
       `
       SELECT id,
