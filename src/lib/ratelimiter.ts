@@ -3,23 +3,35 @@ import { Redis } from '@upstash/redis';
 
 const redis = Redis.fromEnv();
 
-// Limit for login/register
-export const authRateLimit = new Ratelimit({
+// Limits for login/register
+export const authShortLimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(5, '1 m'),
+  limiter: Ratelimit.slidingWindow(5, '5 m'),
   analytics: true,
 });
 
-// Limit for browsing (books, metadata, etc.)
-export const defRateLimit = new Ratelimit({
+export const authDailyLimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(500, '1 m'),
+  limiter: Ratelimit.slidingWindow(50, '1 d'),
   analytics: true,
 });
 
-// Limit for scraping
-export const dailyRateLimit = new Ratelimit({
+// Limits for browsing (books, metadata, etc.)
+export const defLimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(10000, '1 d'),
+  limiter: Ratelimit.slidingWindow(120, '1 m'),
+  analytics: true,
+});
+
+export const dailyLimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5000, '1 d'),
+  analytics: true,
+});
+
+// Limit for authenticated user actions
+export const userDaily = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(1000, '1 d'),
   analytics: true,
 });
