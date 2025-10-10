@@ -46,7 +46,9 @@ export default function searchPage() {
       const data: GetBookApiResponse = await res.json();
       return data;
     } catch (err) {
-      throw new Error(`Failed to fetch book relating to ${searchQuery}: ${err}`);
+      throw new Error(
+        `Failed to fetch book relating to ${searchQuery}: ${err}`
+      );
     }
   };
 
@@ -202,17 +204,20 @@ export default function searchPage() {
                   </div>
                   <div className='pt-4 border-t border-gray-200 space-y-2'>
                     <div className='text-sm text-gray-600'>
-                      <span className='font-medium'>Page:</span>{' '}
-                      {pageHistory.length}
-                      {data?.totalPages !== null && ` / ${data?.totalPages}`}
+                      <span className='font-medium'>
+                        Page: {pageHistory.length} /
+                        {data?.totalPages ? ` ${data?.totalPages}`: ' 0'}
+                      </span>
                     </div>
                     <div className='text-sm text-gray-600'>
-                      <span className='font-medium'>Total Books:</span>{' '}
-                      {data?.books || 0}
+                      <span className='font-medium'>
+                        Total Books: {data?.books || 0}
+                      </span>
                     </div>
                     <div className='text-sm text-gray-600'>
-                      <span className='font-medium'>Search Query:</span> "
-                      {searchQuery}"
+                      <span className='font-medium'>
+                        Search Query: "{searchQuery}"
+                      </span>
                     </div>
                   </div>
                 </div>
