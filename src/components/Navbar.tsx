@@ -15,7 +15,7 @@ export default function Navbar() {
   const [debouncedSearchBook] = useDebounce(searchBook, 350);
   const pathName = usePathname();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, csrfToken, refresh } = useAuth();
 
   // Close Navbar & Set scrolling back on after traversing page
   useEffect(() => {
@@ -74,10 +74,31 @@ export default function Navbar() {
     if (queryParam) router.push(`/search?query=${queryParam}`);
   }
 
+  const handleLogout = async () => {
+    if (!user) return;
+
+    try {
+      const res = await fetch('/api/auth/logout', {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'applicationjson',
+          'X-CSRF-Token': csrfToken ?? '',
+        },
+      });
+
+      if (res.ok) await refresh();
+    } catch (err) {
+      console.log('Failed to logout', err);
+    }
+  };
+
   const usernameElement =
-    user?.username && user.username.length > 10
-      ? <span>{`${user.username.slice(0, 10)}.`}</span>
-      : <span>{user?.username}</span>;
+    user?.username && user.username.length > 10 ? (
+      <span>{`${user.username.slice(0, 10)}.`}</span>
+    ) : (
+      <span>{user?.username}</span>
+    );
 
   const bookElements = books.map((book: Book) => (
     <Link
@@ -142,6 +163,28 @@ export default function Navbar() {
                   <span className='absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-orange-500 group-hover:w-full transition-all duration-300'></span>
                 </Link>
               </li>
+              {user ? (
+                <li>
+                  <button
+                    onClick={handleLogout}
+                    className='cursor-pointer relative text-gray-700 hover:text-amber-600 font-medium transition-all duration-300 group'
+                  >
+                    Logout
+                    <span className='absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-orange-500 group-hover:w-full transition-all duration-300'></span>
+                  </button>
+                </li>
+              ) : (
+                <li>
+                  <Link
+                    href='/login'
+                    target='_blank'
+                    className='relative text-gray-700 hover:text-amber-600 font-medium transition-all duration-300 group'
+                  >
+                    Sign In
+                    <span className='absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-orange-500 group-hover:w-full transition-all duration-300'></span>
+                  </Link>
+                </li>
+              )}
             </ul>
           </nav>
         </div>
@@ -179,9 +222,9 @@ export default function Navbar() {
             <Image
               src='/icons/userIcon.png'
               alt='Profile'
-              width='40'
-              height='40'
-              className=''
+              width='45'
+              height='45'
+              className='rounded-full border-2 border-amber-400'
             />
             {usernameElement}
           </div>
@@ -282,7 +325,9 @@ export default function Navbar() {
               alt='Profile'
             />
             <div className='flex-1'>
-              <p className='text-sm font-medium text-gray-700'>Reader</p>
+              <p className='text-sm font-medium text-gray-700'>
+                {user ? user.username : 'Reader'}
+              </p>
               <p className='text-xs text-gray-500'>Book enthusiast</p>
             </div>
           </div>
