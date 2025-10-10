@@ -1,7 +1,14 @@
 import pool from './db';
 import { NextRequest } from 'next/server';
 
-export default async function getUserFromSession(req: NextRequest) {
+export default async function getUserFromSession(
+  req: NextRequest
+): Promise<{
+  id: string;
+  username: string;
+  csrfToken: string;
+  session: string;
+} | null> {
   const sessionId = req.cookies.get('session')?.value;
 
   if (!sessionId) return null;
@@ -9,9 +16,11 @@ export default async function getUserFromSession(req: NextRequest) {
   try {
     const { rows } = await pool.query(
       `
-        SELECT users.id,
-        users.username,
-        sessions.csrf_token
+        SELECT 
+          users.id AS user_id,
+          users.username,
+          sessions.id AS session_id,
+          sessions.csrf_token
         FROM users
         INNER JOIN sessions
           ON sessions.user_id = users.id
@@ -25,7 +34,12 @@ export default async function getUserFromSession(req: NextRequest) {
       return null;
     }
 
-    return { id: rows[0].id, username: rows[0].username, csrfToken: rows[0].csrf_token };
+    return {
+      id: rows[0].user_id,
+      username: rows[0].username,
+      session: rows[0].session_id,
+      csrfToken: rows[0].csrf_token,
+    };
     
   } catch (err) {
     console.log('DB session query error:', err);
