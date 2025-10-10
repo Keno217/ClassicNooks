@@ -17,6 +17,20 @@ export default function BookRail({
   const [showRightArrow, setShowRightArrow] = useState(false);
   const bookRailRef = useRef<HTMLDivElement>(null);
 
+  const fetchBooks = async ({
+    pageParam = url,
+  }): Promise<GetBookApiResponse> => {
+    try {
+      const fetchUrl = pageParam;
+      const res = await fetch(fetchUrl);
+      if (!res.ok) throw new Error('Failed to fetch books');
+      const data: GetBookApiResponse = await res.json();
+      return data;
+    } catch (err) {
+      throw new Error('Failed to fetch books');
+    }
+  };
+
   const {
     data,
     fetchNextPage,
@@ -26,14 +40,7 @@ export default function BookRail({
     error,
   } = useInfiniteQuery({
     queryKey: ['books', url],
-    queryFn: async ({ pageParam }: { pageParam?: string }) => {
-      const fetchUrl = pageParam || url;
-      const res = await fetch(fetchUrl);
-      if (!res.ok) throw new Error('Failed to fetch books');
-      const data: GetBookApiResponse = await res.json();
-      return data;
-    },
-
+    queryFn: fetchBooks,
     getNextPageParam: (lastPage) => lastPage.next ?? undefined,
     initialPageParam: url,
   });
@@ -41,7 +48,7 @@ export default function BookRail({
   // TODO: Implement error handling, also add stats about bookrail, maybe more info
   const books: Book[] = data?.pages.flatMap((page) => page.results) ?? [];
 
-  const updateArrowVisibility = () => {
+  const updateBookRail = async (): Promise<void> => {
     const container = bookRailRef.current;
 
     if (container) {
@@ -56,6 +63,17 @@ export default function BookRail({
       // Display left/right arrow if they did
       setShowLeftArrow(hasScrolledLeft);
       setShowRightArrow(hasScrolledRight);
+
+      // Lazy load next set of books
+      const halfway = container.scrollWidth / 2;
+
+      if (
+        hasNextPage &&
+        container.scrollLeft + container.clientWidth >= halfway &&
+        !isFetchingNextPage
+      ) {
+        await fetchNextPage();
+      }
     }
   };
 
@@ -63,18 +81,18 @@ export default function BookRail({
     const container = bookRailRef.current;
 
     if (container) {
-      updateArrowVisibility();
-      container.addEventListener('scroll', updateArrowVisibility);
+      updateBookRail();
+      container.addEventListener('scroll', updateBookRail);
 
       return () => {
-        container.removeEventListener('scroll', updateArrowVisibility);
+        container.removeEventListener('scroll', updateBookRail);
       };
     }
     /* Books in dependency arr so the
     arrows appear upon rendering books */
   }, [books]);
 
-  const scrollLeft = () => {
+  const scrollLeft = (): void => {
     const container = bookRailRef.current;
 
     if (container) {
@@ -84,20 +102,10 @@ export default function BookRail({
 
   const scrollRight = async () => {
     const container = bookRailRef.current;
-    if (!container) return;
 
-    const halfway = container.scrollWidth / 2;
-
-    if (container) {
+    if (container)
       container.scrollBy({ left: 400, behavior: 'smooth' });
-
-      if (
-        hasNextPage &&
-        container.scrollLeft + container.clientWidth >= halfway
-      )
-        await fetchNextPage();
-    }
-  };
+  }
 
   const BookElements = books.map((bookObj) => (
     <BookCard
