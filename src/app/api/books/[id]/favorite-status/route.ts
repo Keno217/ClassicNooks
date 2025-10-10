@@ -83,7 +83,7 @@ export async function POST(
     return NextResponse.json({ error: 'User not authorized' }, { status: 401 });
 
   if (!csrfHeader || csrfHeader !== user.csrfToken) {
-    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    return NextResponse.json({ error: 'User not authorized' }, { status: 403 });
   }
 
   try {
@@ -137,7 +137,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'User not authorized' }, { status: 401 });
 
   if (!csrfHeader || csrfHeader !== user.csrfToken) {
-    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    return NextResponse.json({ error: 'User not authorized' }, { status: 403 });
   }
 
   try {
