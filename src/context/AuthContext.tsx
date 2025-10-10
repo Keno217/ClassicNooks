@@ -34,12 +34,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchMe = async () => {
     setLoading(true);
+    
     try {
       const res = await fetch('/api/auth/me', { credentials: 'include' });
       const data = await res.json();
 
-      if (!res.ok || !data.user)
+      if (!res.ok || !data.user) {
+        setUser(null);
         return console.log('Failed to fetch user data');
+      }
 
       setUser(data.user);
       setCsrfToken(data.csrfToken);
