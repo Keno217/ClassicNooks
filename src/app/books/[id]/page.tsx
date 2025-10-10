@@ -33,16 +33,21 @@ export default function BookInfo({
           credentials: 'include',
         });
 
-        if (!resFav.ok) return;
+        if (!resFav.ok) {
+          setIsFavorited(false);
+          return;
+        }
+        
         const favData = await resFav.json();
         setIsFavorited(favData.isFavorited);
       } catch (err) {
+        setIsFavorited(false);
         console.log('Error fetching user/favorites:', err);
       }
     };
 
     getFavoriteStatus();
-  }, []);
+  }, [user]);
 
   const fetchBook = async () => {
     try {
