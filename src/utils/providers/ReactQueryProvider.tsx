@@ -9,8 +9,7 @@ const ReactQueryProvider = ({ children }: { children: React.ReactNode }) => {
       queries : {
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
-        refetchOnMount: false,
-        staleTime: Infinity,
+        refetchOnMount: true,
       }
     }
   }));
