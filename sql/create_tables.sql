@@ -58,3 +58,11 @@ CREATE TABLE user_favorites (
   created_at TIMESTAMP DEFAULT NOW(),
   PRIMARY KEY (user_id, book_id)
 );
+
+-- history books table
+CREATE TABLE user_history (
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  book_id INT REFERENCES books(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  PRIMARY KEY (user_id, book_id)
+)
