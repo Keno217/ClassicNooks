@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { use, useEffect, useState } from 'react';
@@ -82,7 +81,6 @@ export default function BookInfo({
       const res = await fetch(`/api/books/${bookId}/favorite-status`, {
         method: method,
         credentials: 'include',
-        body: JSON.stringify({ bookId }),
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Token': csrfToken ?? '',
@@ -97,6 +95,30 @@ export default function BookInfo({
       setIsFavorited((prevIsFavorite) => !prevIsFavorite);
     } catch (err) {
       console.log(`Error adding book#${bookId} to favorites:`, err);
+    }
+  };
+
+  const handleBookHistory = async () => {
+    if (!user) return;
+
+    try {
+      const res = await fetch('/api/users/me/history', {
+        method: 'POST',
+        credentials: 'include',
+        body: JSON.stringify({ id: bookId }),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken ?? '',
+        },
+      });
+
+      if (!res.ok) {
+        console.log('Failed to add book to user history');
+        return;
+      }
+
+    } catch (err) {
+      console.log(`Error adding book${bookId} to history`);
     }
   };
 
@@ -126,13 +148,6 @@ export default function BookInfo({
   ));
 
   const isGenre = genres.length > 0;
-  const readBook = book?.book ? book.book : pathName; // TODO: make link known if it doesnt work
-
-  /* 
-    TODO: Convert all img to Image component for optimization later
-    const bookCover =
-      book.cover && book.cover !== '' ? book.cover : '/book-cover.jpg';
-  */
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100'>
@@ -171,12 +186,15 @@ export default function BookInfo({
                 </p>
               </div>
               <div className='flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4'>
-                <Link
+                <a
                   className='w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-500/50'
-                  href={readBook}
+                  href={book?.book}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  onClick={handleBookHistory}
                 >
                   📖 Read Now
-                </Link>
+                </a>
                 <div className='flex items-center gap-3'>
                   <button
                     className='cursor-pointer group p-4 bg-white hover:bg-red-50 border-2 border-gray-200 hover:border-red-300 rounded-xl transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-red-500/20'
@@ -195,7 +213,7 @@ export default function BookInfo({
                     />
                   </button>
                   <a
-                    href={book.book}
+                    href={book?.book}
                     download
                     className='cursor-pointer group p-4 bg-white hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-300 rounded-xl transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-500/20'
                   >
