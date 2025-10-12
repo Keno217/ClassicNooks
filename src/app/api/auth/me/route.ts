@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
       `
         SELECT users.id,
         users.username,
+        users.created_at,
         sessions.csrf_token
         FROM users
         INNER JOIN sessions
@@ -27,12 +28,16 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       {
-        user: { id: rows[0].id, username: rows[0].username },
+        user: {
+          id: rows[0].id,
+          username: rows[0].username,
+          created: rows[0].created_at,
+        },
         csrfToken: rows[0].csrf_token,
       },
       { status: 200 }
     );
-
+    
   } catch (err) {
     console.error('DB session query error:', err);
     return NextResponse.json(
