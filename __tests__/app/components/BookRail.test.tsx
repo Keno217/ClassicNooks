@@ -2,6 +2,21 @@ import { render, screen, act } from '@testing-library/react';
 import BookRail from '@/components/BookRail';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+jest.mock('@/context/AuthContext', () => ({
+  useAuth: jest.fn(() => ({
+    user: null,
+    csrfToken: null,
+    refresh: jest.fn(),
+  })),
+}));
+
+jest.mock('next/image', () => ({
+  __esModule: true,
+  default: ({ src, alt, ...rest }: any) => (
+    <img src={src} alt={alt} {...rest} />
+  ),
+}));
+
 const mockBooks = [
   {
     id: 1,
@@ -56,6 +71,7 @@ describe('BookRail', () => {
   test('renders BookCard components', async () => {
     global.fetch = jest.fn(() =>
       Promise.resolve({
+        ok: true,
         json: () =>
           Promise.resolve({
             results: mockBooks,
@@ -74,11 +90,11 @@ describe('BookRail', () => {
         level: 3,
         name: book.title,
       });
-      
+
       expect(title).toBeInTheDocument();
     }
 
-    (global.fetch as jest.Mock).mockRestore();
+    (global.fetch as jest.Mock).mockClear();
   });
 
   test('renders scroll buttons and triggers scroll', async () => {
@@ -94,6 +110,7 @@ describe('BookRail', () => {
 
     global.fetch = jest.fn(() =>
       Promise.resolve({
+        ok: true,
         json: () =>
           Promise.resolve({
             results: manyBooks,
@@ -166,6 +183,6 @@ describe('BookRail', () => {
       behavior: 'smooth',
     });
 
-    (global.fetch as jest.Mock).mockRestore();
+    (global.fetch as jest.Mock).mockClear();
   });
 });
