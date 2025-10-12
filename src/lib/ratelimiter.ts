@@ -19,7 +19,7 @@ export const authDailyLimit = new Ratelimit({
 // Limits for browsing (books, metadata, etc.)
 export const defLimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(120, '1 m'),
+  limiter: Ratelimit.slidingWindow(175, '1 m'),
   analytics: true,
 });
 
