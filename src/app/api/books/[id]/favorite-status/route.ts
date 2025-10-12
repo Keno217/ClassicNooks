@@ -29,9 +29,10 @@ export async function GET(
   const user = await getUserFromSession(req);
 
   if (!user)
-    return NextResponse.json({ error: 'User not authorized' }, { status: 401 });
+    return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
 
   try {
+    // DB query to get status of whether the user has favorited the book
     const { rows } = await pool.query(
       `
       SELECT 1
@@ -75,7 +76,7 @@ export async function POST(
     );
   }
 
-  // Check session & CSRF token
+  // Check session
   const user = await getUserFromSession(req);
   const csrfHeader = req.headers.get('X-CSRF-Token');
 
@@ -87,6 +88,7 @@ export async function POST(
   }
 
   try {
+    // DB query to insert book into user favorites
     await pool.query(
       `
       INSERT INTO user_favorites (user_id, book_id)
@@ -129,7 +131,7 @@ export async function DELETE(
     );
   }
 
-  // Check session & CSRF token
+  // Check session
   const user = await getUserFromSession(req);
   const csrfHeader = req.headers.get('X-CSRF-Token');
 
@@ -141,6 +143,7 @@ export async function DELETE(
   }
 
   try {
+    // DB query to remove book from user favorites
     await pool.query(
       `
       DELETE FROM user_favorites

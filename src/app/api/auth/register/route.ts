@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Validate username and password
+  // Validate/sanitize input
   if (user.length < 3 || user.length > 30)
     return NextResponse.json(
       { error: 'Username must be between 3 and 30 characters' },
@@ -70,7 +70,6 @@ export async function POST(req: NextRequest) {
     );
 
   try {
-    // DB query
     const { rows } = await pool.query(
       `
       SELECT username

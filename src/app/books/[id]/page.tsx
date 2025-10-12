@@ -116,7 +116,7 @@ export default function BookInfo({
         console.log('Failed to add book to user history');
         return;
       }
-
+      
     } catch (err) {
       console.log(`Error adding book${bookId} to history`);
     }
@@ -187,13 +187,19 @@ export default function BookInfo({
               </div>
               <div className='flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4'>
                 <a
-                  className='w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-500/50'
+                  className='w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-500/50 gap-x-4'
                   href={book?.book}
                   target='_blank'
                   rel='noopener noreferrer'
                   onClick={handleBookHistory}
                 >
-                  📖 Read Now
+                  <Image
+                    src='/icons/bookIcon.png'
+                    width={25}
+                    height={25}
+                    alt=''
+                  />
+                  Read Now
                 </a>
                 <div className='flex items-center gap-3'>
                   <button

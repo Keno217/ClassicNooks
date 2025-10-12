@@ -8,7 +8,8 @@ export async function GET(
 ) {
   const { id } = await params;
   const TTL_SECONDS = 24 * 60 * 60; // 24 hrs
-
+  
+  // Validate/sanitize input
   if (!id || isNaN(Number(id))) {
     return NextResponse.json(
       { error: 'Invalid book ID, it must be a number.' },
@@ -30,8 +31,9 @@ export async function GET(
   if (cachedRes) return NextResponse.json(cachedRes, { status: 200 });
 
   try {
+    // DB query for individual book
     const bookQuery = await pool.query(
-      `
+    `
     SELECT 
       b.id,
       b.title,

@@ -161,9 +161,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       maxAge: 6 * 60 * 60,
     });
 
-    // Take out all of the fetch requests to api/me on frontend pages, only one is needed with usecontext
-    // Set up CORS/CSP headers
-
     return response;
   } catch (err) {
     console.log(`DB/Session error: ${err}`);

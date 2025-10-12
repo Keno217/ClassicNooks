@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
   searchInput = sanitizeInput(searchInput ?? '');
   bookGenre = sanitizeInput(bookGenre ?? '');
 
+  // Check cache
   const cacheKey = `books_${lastId}_${limit}_${searchInput}_${bookGenre}`;
   const cachedRes = await getCache(cacheKey);
   if (cachedRes) return NextResponse.json(cachedRes, { status: 200 });

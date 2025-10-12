@@ -3,6 +3,7 @@ import getUserFromSession from '@/lib/session';
 import pool from '@/lib/db';
 
 export async function DELETE(req: NextRequest) {
+  // Verify session
   const user = await getUserFromSession(req);
   const csrfHeader = req.headers.get('X-CSRF-Token');
 

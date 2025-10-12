@@ -132,8 +132,14 @@ export default function Navbar() {
     <>
       <header className='w-full h-[10vh] flex items-center p-4 border-b bg-gradient-to-r from-white via-slate-50 to-white border-gray-200 z-20 sticky inset-0 shadow-lg backdrop-blur-sm'>
         <div className='h-full w-full flex items-center gap-8'>
-          <h2 className='text-4xl font-bold bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300'>
-            📚 BookWorm
+          <h2 className='text-4xl font-bold bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300 flex items-center gap-2'>
+            <Image
+              src='/icons/booksIcon.png'
+              alt='BookWorm'
+              width='40'
+              height='40'
+            />
+            BookWorm
           </h2>
           <button
             className='flex ml-auto flex-col gap-1.5 items-end hover:cursor-pointer sm:hidden p-2 rounded-lg hover:bg-amber-50 transition-all duration-200 group'
@@ -156,7 +162,7 @@ export default function Navbar() {
               </li>
               <li>
                 <Link
-                  href=''
+                  href='/library'
                   className='relative text-gray-700 hover:text-amber-600 font-medium transition-all duration-300 group'
                 >
                   Library
@@ -177,7 +183,6 @@ export default function Navbar() {
                 <li>
                   <Link
                     href='/login'
-                    target='_blank'
                     className='relative text-gray-700 hover:text-amber-600 font-medium transition-all duration-300 group'
                   >
                     Sign In
@@ -242,8 +247,14 @@ export default function Navbar() {
         }`}
       >
         <div className='flex items-center justify-between mb-8'>
-          <h3 className='text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent'>
-            📚 Menu
+          <h3 className='text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent flex items-center gap-2'>
+            <Image
+              src='/icons/booksIcon.png'
+              alt='Menu'
+              width='32'
+              height='32'
+            />
+            Menu
           </h3>
           <button
             className='flex flex-col gap-1 items-center justify-center w-10 h-10 p-2 hover:cursor-pointer hover:bg-amber-100 rounded-xl transition-all duration-200 group'
@@ -261,7 +272,12 @@ export default function Navbar() {
                 className='flex items-center gap-4 p-4 rounded-xl bg-white/70 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 transition-all duration-300 shadow-sm hover:shadow-md group border border-amber-100/50'
               >
                 <div className='w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center text-white font-bold text-sm group-hover:scale-110 transition-transform duration-200'>
-                  🏠
+                  <Image
+                    src='/icons/houseIcon.png'
+                    alt='Home'
+                    width='20'
+                    height='20'
+                  />
                 </div>
                 <span className='text-gray-700 font-medium group-hover:text-amber-700 transition-colors duration-200'>
                   Home
@@ -270,11 +286,16 @@ export default function Navbar() {
             </li>
             <li>
               <Link
-                href=''
+                href='/library'
                 className='flex items-center gap-4 p-4 rounded-xl bg-white/70 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 transition-all duration-300 shadow-sm hover:shadow-md group border border-amber-100/50'
               >
                 <div className='w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm group-hover:scale-110 transition-transform duration-200'>
-                  📚
+                  <Image
+                    src='/icons/booksIcon.png'
+                    alt='Library'
+                    width='20'
+                    height='20'
+                  />
                 </div>
                 <span className='text-gray-700 font-medium group-hover:text-blue-700 transition-colors duration-200'>
                   Library

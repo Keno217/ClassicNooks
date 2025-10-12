@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
 export async function GET(req: NextRequest) {
+  // Verify session
   const user = await getUserFromSession(req);
 
   if (!user)
@@ -12,6 +13,7 @@ export async function GET(req: NextRequest) {
     );
 
   try {
+    // DB query to get user's favorite books
     const { rows } = await pool.query(
       `
       SELECT 
@@ -53,6 +55,7 @@ export async function GET(req: NextRequest) {
       },
       { status: 200 }
     );
+    
   } catch (err) {
     console.log('DB error', err);
     return NextResponse.json(

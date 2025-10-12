@@ -96,7 +96,7 @@ export default function Register() {
   };
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4'>
+    <main className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4'>
       <div className='w-full max-w-md mx-auto bg-white rounded-xl shadow-lg border border-gray-100 p-8'>
         <h2 className='text-4xl font-bold text-center bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300 mb-8'>
           📚 BookWorm
@@ -203,6 +203,6 @@ export default function Register() {
           </form>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

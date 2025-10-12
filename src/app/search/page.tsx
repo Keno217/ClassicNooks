@@ -133,7 +133,7 @@ export default function searchPage() {
   });
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100'>
+    <div className='flex flex-col min-h-screen bg-gradient-to-br from-slate-50 to-slate-100'>
       <Navbar />
       <main className='container mx-auto px-4 py-8 lg:py-12'>
         <div className='max-w-7xl mx-auto'>
