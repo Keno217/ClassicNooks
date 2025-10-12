@@ -7,6 +7,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import type { Book, GetBookApiResponse } from '@/types/book';
 
 export default function searchPage() {
@@ -226,6 +227,7 @@ export default function searchPage() {
           )}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

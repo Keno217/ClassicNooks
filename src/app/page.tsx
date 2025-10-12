@@ -1,5 +1,6 @@
 import Navbar from '../components/Navbar.tsx';
 import BookRail from '../components/BookRail.tsx';
+import Footer from '@/components/Footer.tsx';
 
 export default function Home() {
   // Orange Wave made with AI
@@ -16,10 +17,14 @@ export default function Home() {
     </svg>
   );
 
+  /* Add a footer for ToS & acknowledge gutenberg,
+  and a banner telling users books are dependent
+  on their API */
+  
   return (
     <div className='w-full h-full flex flex-col'>
       <Navbar />
-      <div className='h-[33.33vh] flex items-center justify-center relative overflow-hidden bg-gradient-to-tr from-orange-600 to-orange-400 text-center'>
+      <div className='h-[33.33vh] flex items-center justify-center relative overflow-hidden bg-gradient-to-tr from-orange-600 to-orange-400 text-center px-2'>
         <h1 className='text-white text-3xl font-bold z-10'>
           Thousands of free classics, waiting for you to explore.
         </h1>
@@ -39,6 +44,7 @@ export default function Home() {
         <BookRail title='Biography' url='/api/books?genre=biography' />
         <BookRail title='Education' url='/api/books?genre=education' />
       </main>
+      <Footer />
     </div>
   );
 }

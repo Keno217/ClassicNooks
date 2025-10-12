@@ -8,6 +8,7 @@ import { use, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar.tsx';
 import BookRail from '@/components/BookRail.tsx';
+import Footer from '@/components/Footer';
 import allGenres from '@/data/genres.ts';
 
 export default function BookInfo({
@@ -37,7 +38,7 @@ export default function BookInfo({
           setIsFavorited(false);
           return;
         }
-        
+
         const favData = await resFav.json();
         setIsFavorited(favData.isFavorited);
       } catch (err) {
@@ -47,7 +48,7 @@ export default function BookInfo({
     };
 
     getFavoriteStatus();
-  }, [user]);
+  }, [user?.id]);
 
   const fetchBook = async () => {
     try {
@@ -209,19 +210,20 @@ export default function BookInfo({
             </div>
           </div>
         </div>
+        <section className='mt-16'>
+          <div className='py-12'>
+            {isGenre ? (
+              <BookRail
+                title='Similar books you may like...'
+                url={`/api/books?genre=${genres[0]}`}
+              />
+            ) : (
+              <BookRail title='Other Trending Books' url='/api/books' />
+            )}
+          </div>
+        </section>
       </main>
-      <footer className='bg-white border-t border-gray-200 mt-16'>
-        <div className='py-12'>
-          {isGenre ? (
-            <BookRail
-              title='Similar books you may like...'
-              url={`/api/books?genre=${genres[0]}`}
-            />
-          ) : (
-            <BookRail title='Other Trending Books' url='/api/books' />
-          )}
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
