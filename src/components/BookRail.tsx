@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import BookCard from './BookCard.tsx';
+import { useAuth } from '@/context/AuthContext.tsx';
 import type { Book, GetBookApiResponse } from '@/types/book';
 
 export default function BookRail({
@@ -16,6 +17,7 @@ export default function BookRail({
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
   const bookRailRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   const fetchBooks = async ({
     pageParam = url,
@@ -39,7 +41,7 @@ export default function BookRail({
     isError,
     error,
   } = useInfiniteQuery({
-    queryKey: ['books', url],
+    queryKey: ['books', url, user?.id],
     queryFn: fetchBooks,
     getNextPageParam: (lastPage) => lastPage.next ?? undefined,
     initialPageParam: url,
@@ -103,9 +105,8 @@ export default function BookRail({
   const scrollRight = async () => {
     const container = bookRailRef.current;
 
-    if (container)
-      container.scrollBy({ left: 400, behavior: 'smooth' });
-  }
+    if (container) container.scrollBy({ left: 400, behavior: 'smooth' });
+  };
 
   const BookElements = books.map((bookObj) => (
     <BookCard
