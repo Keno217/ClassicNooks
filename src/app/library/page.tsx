@@ -12,8 +12,16 @@ export default function Library() {
   return (
     <div className='flex flex-col min-h-screen bg-gradient-to-br from-slate-50 to-slate-100'>
       <Navbar />
-      <main className='w-full h-full flex flex-col'>
-        <div className='bg-gradient-to-r from-orange-500 to-orange-400 py-12 px-4 shadow-lg'>
+      <main
+        className='w-full h-full flex flex-col'
+        role='main'
+        aria-label='User library page'
+      >
+        <div
+          className='bg-gradient-to-r from-orange-500 to-orange-400 py-12 px-4 shadow-lg'
+          role='banner'
+          aria-label='User profile header'
+        >
           <div className='max-w-7xl mx-auto flex flex-col items-center'>
             <div className='bg-white rounded-full p-2 shadow-xl mb-6 ring-4 ring-orange-200'>
               <Image
@@ -36,7 +44,11 @@ export default function Library() {
             </div>
           </div>
         </div>
-        <div className='container mx-auto px-4 py-8'>
+        <div
+          className='container mx-auto px-4 py-8'
+          role='region'
+          aria-label="User's book collections"
+        >
           <BookRail title='Favorites' url='/api/users/me/favorites' />
           <BookRail title='History' url='/api/users/me/history' />
         </div>

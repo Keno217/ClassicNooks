@@ -3,20 +3,25 @@ import { Redis } from '@upstash/redis';
 const redis = Redis.fromEnv();
 
 // Useful cache functions for searching books, metadata, etc.
-export const getCache = async (key: string) => {
+export const getCache = async <T>(key: string): Promise<T | null> => {
   try {
-    const data: any = await redis.get(key);
-    return data ? data : null;
+    const data = await redis.get<T>(key);
+    return data ?? null;
   } catch (err) {
-    console.log(`Cache retrieval error for key-${key}:`, err);
+    console.error(`Cache retrieval error for key-${key}:`, err);
     return null;
   }
 };
 
-export const setCache = async (key: string, value: any, ttlSeconds: number) => {
+// Generic cache setter
+export const setCache = async <T>(
+  key: string,
+  value: T,
+  ttlSeconds: number
+): Promise<void> => {
   try {
     await redis.set(key, value, { ex: ttlSeconds });
   } catch (err) {
-    console.log(`Cache set error for key-${key}:`, err);
+    console.error(`Cache set error for key-${key}:`, err);
   }
 };

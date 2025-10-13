@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { use, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -17,7 +16,6 @@ export default function BookInfo({
 }) {
   const [isFavorited, setIsFavorited] = useState(false);
   const { user, csrfToken } = useAuth();
-  const pathName = usePathname();
   const { id } = use(params);
   let bookId = Number(id);
 
@@ -47,7 +45,7 @@ export default function BookInfo({
     };
 
     getFavoriteStatus();
-  }, [user?.id]);
+  }, [bookId, user?.id]);
 
   const fetchBook = async () => {
     try {
@@ -116,9 +114,8 @@ export default function BookInfo({
         console.log('Failed to add book to user history');
         return;
       }
-      
     } catch (err) {
-      console.log(`Error adding book${bookId} to history`);
+      console.log(`Error adding book${bookId} to history`, err);
     }
   };
 
@@ -152,15 +149,21 @@ export default function BookInfo({
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100'>
       <Navbar />
-      <main className='container mx-auto px-4 py-8 lg:py-12'>
+      <main
+        className='container mx-auto px-4 py-8 lg:py-12'
+        role='main'
+        aria-label='Book details page'
+      >
         <div className='max-w-7xl mx-auto'>
           <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12'>
             <div className='xl:col-span-3 lg:col-span-4'>
               <figure className='flex justify-center items-center h-full w-full'>
                 <div className='w-[160px] h-[250px] lg:h-[500px] lg:w-80 flex justify-center items-center'>
-                  <img
-                    src={book?.cover}
+                  <Image
+                    src={book.cover || '/icons/bookCoverIcon.png'}
                     alt={`Cover of ${book?.title} by ${authorsName}`}
+                    width={500}
+                    height={800}
                     className='rounded-lg shadow-2xl w-full h-full object-fill'
                   />
                 </div>
@@ -176,28 +179,42 @@ export default function BookInfo({
                 </h2>
               </div>
               <div className='flex justify-center lg:justify-start'>
-                <ul className='flex flex-wrap justify-center gap-2 md:gap-3'>
+                <ul
+                  className='flex flex-wrap justify-center gap-2 md:gap-3'
+                  role='list'
+                  aria-label='Book genres'
+                >
                   {genreElements}
                 </ul>
               </div>
-              <div className='bg-white rounded-xl p-6 md:p-8 shadow-lg border border-gray-100'>
+              <div
+                className='bg-white rounded-xl p-6 md:p-8 shadow-lg border border-gray-100'
+                role='region'
+                aria-label='Book description'
+              >
                 <p className='text-gray-700 text-base md:text-lg leading-relaxed max-w-none'>
                   {book?.description}
                 </p>
               </div>
-              <div className='flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4'>
+              <div
+                className='flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4'
+                role='group'
+                aria-label='Book actions'
+              >
                 <a
                   className='w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-500/50 gap-x-4'
                   href={book?.book}
                   target='_blank'
                   rel='noopener noreferrer'
                   onClick={handleBookHistory}
+                  aria-label={`Read ${book?.title} now`}
                 >
                   <Image
                     src='/icons/bookIcon.png'
                     width={25}
                     height={25}
                     alt=''
+                    aria-hidden='true'
                   />
                   Read Now
                 </a>
@@ -205,6 +222,12 @@ export default function BookInfo({
                   <button
                     className='cursor-pointer group p-4 bg-white hover:bg-red-50 border-2 border-gray-200 hover:border-red-300 rounded-xl transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-red-500/20'
                     onClick={handleFavorite}
+                    aria-label={
+                      isFavorited
+                        ? `Remove ${book?.title} from favorites`
+                        : `Add ${book?.title} to favorites`
+                    }
+                    aria-pressed={isFavorited}
                   >
                     <Image
                       src={
@@ -212,21 +235,26 @@ export default function BookInfo({
                           ? '/icons/redHeartIcon.png'
                           : '/icons/blackHeartIcon.png'
                       }
-                      alt='Add to Favorites'
+                      alt=''
                       width='28'
                       height='28'
                       className='group-hover:scale-110 transition-transform duration-200'
+                      aria-hidden='true'
                     />
                   </button>
                   <a
                     href={book?.book}
                     download
                     className='cursor-pointer group p-4 bg-white hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-300 rounded-xl transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-500/20'
+                    aria-label={`Download ${book?.title} eBook`}
                   >
-                    <img
-                      src='https://cdn-icons-png.flaticon.com/512/0/532.png'
-                      alt='Download eBook'
+                    <Image
+                      src='/icons/downloadIcon.png'
+                      alt=''
+                      width={28}
+                      height={28}
                       className='w-7 h-7 group-hover:scale-110 transition-transform duration-200'
+                      aria-hidden='true'
                     />
                   </a>
                 </div>
@@ -234,7 +262,11 @@ export default function BookInfo({
             </div>
           </div>
         </div>
-        <section className='mt-16'>
+        <section
+          className='mt-16'
+          role='region'
+          aria-label='Similar books recommendations'
+        >
           <div className='py-12'>
             {isGenre ? (
               <BookRail

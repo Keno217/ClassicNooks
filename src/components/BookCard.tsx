@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function BookCard({
   id,
@@ -12,12 +13,21 @@ export default function BookCard({
   cover: string;
 }) {
   return (
-    <figure className='flex-shrink-0 w-[160px] md:w-[180px] text-center'>
-      <Link href={`/books/${id}`} className='block'>
+    <figure
+      className='flex-shrink-0 w-[160px] md:w-[180px] text-center'
+      role='listitem'
+    >
+      <Link
+        href={`/books/${id}`}
+        className='block'
+        aria-label={`View details for ${title} by ${author}`}
+      >
         <div className='group w-full h-[240px] md:h-[270px] bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg border border-gray-100 hover:border-amber-200 transition-all duration-300'>
-          <img
+          <Image
             className='w-full h-full object-cover transition-all duration-300'
-            src={cover}
+            src={cover || '/icons/bookCoverIcon.png'}
+            width={192}
+            height={120}
             alt={`Cover of ${title} by ${author}`}
           />
         </div>

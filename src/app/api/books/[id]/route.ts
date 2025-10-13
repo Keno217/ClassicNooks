@@ -4,11 +4,11 @@ import pool from '@/lib/db.ts';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id } = await context.params;
   const TTL_SECONDS = 24 * 60 * 60; // 24 hrs
-  
+
   // Validate/sanitize input
   if (!id || isNaN(Number(id))) {
     return NextResponse.json(

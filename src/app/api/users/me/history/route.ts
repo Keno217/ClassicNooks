@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
       },
       { status: 200 }
     );
-
+    
   } catch (err) {
     console.log('DB error', err);
     return NextResponse.json(
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
 
   try {
     // DB query to insert book into user's history
-    const { rows } = await pool.query(
+    await pool.query(
       `
       INSERT INTO user_history (user_id, book_id)
       VALUES ($1, $2)

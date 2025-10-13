@@ -28,24 +28,20 @@ export default function BookRail({
       if (!res.ok) throw new Error('Failed to fetch books');
       const data: GetBookApiResponse = await res.json();
       return data;
-    } catch (err) {
-      throw new Error('Failed to fetch books');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred';
+      console.log('Error registering user:', message);
+      throw new Error(message);
     }
   };
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isError,
-    error,
-  } = useInfiniteQuery({
-    queryKey: ['books', url, user?.id],
-    queryFn: fetchBooks,
-    getNextPageParam: (lastPage) => lastPage.next ?? undefined,
-    initialPageParam: url,
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ['books', url, user?.id],
+      queryFn: fetchBooks,
+      getNextPageParam: (lastPage) => lastPage.next ?? undefined,
+      initialPageParam: url,
+    });
 
   // TODO: Implement error handling, also add stats about bookrail, maybe more info
   const books: Book[] = data?.pages.flatMap((page) => page.results) ?? [];
@@ -92,6 +88,8 @@ export default function BookRail({
     }
     /* Books in dependency arr so the
     arrows appear upon rendering books */
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [books]);
 
   const scrollLeft = (): void => {
@@ -119,9 +117,15 @@ export default function BookRail({
   ));
 
   return (
-    <section className='w-full flex flex-col px-4 lg:px-6 py-6'>
+    <section
+      className='w-full flex flex-col px-4 lg:px-6 py-6'
+      aria-labelledby={`book-rail-${title.replace(/\s+/g, '-').toLowerCase()}`}
+    >
       <div className='max-w-7xl mx-auto w-full'>
-        <h2 className='text-2xl md:text-3xl font-bold text-gray-900 mb-6'>
+        <h2
+          id={`book-rail-${title.replace(/\s+/g, '-').toLowerCase()}`}
+          className='text-2xl md:text-3xl font-bold text-gray-900 mb-6'
+        >
           {title}
         </h2>
         <div className='relative group'>
@@ -159,6 +163,8 @@ export default function BookRail({
             ref={bookRailRef}
             data-testid='book-rail-container'
             className='flex overflow-x-auto gap-4 md:gap-6 scrollbar-hide scroll-smooth pb-2'
+            role='list'
+            aria-label={`${title} books`}
           >
             {BookElements}
           </div>

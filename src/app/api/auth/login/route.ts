@@ -25,7 +25,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Rate limiting
     user = user.toLowerCase().trim();
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
-    const key: string = user ? user : ip; // Prevent bruteforcing off different IPs
     const { success: burstSuccessUsername } = await authShortLimit.limit(`auth_login_${user}`);
     const { success: dailySuccessUsername } = await authDailyLimit.limit(`auth_login_${user}`);
     const { success: burstSuccessUserIp } = await authShortLimit.limit(`auth_login_${ip}`);
@@ -155,8 +154,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     response.cookies.set('session', sessionId, {
       httpOnly: true,
-      secure: false /* true */,
-      sameSite: 'lax' /* none TODO: Add CRSF protections later before deployment */,
+      secure: true,
+      sameSite: 'lax',
       path: '/',
       maxAge: 6 * 60 * 60,
     });

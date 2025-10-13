@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState, useRef } from 'react';
@@ -19,7 +20,11 @@ export default function Login() {
   }, [loading, user, router]);
 
   // Handle user login
-  const loginUser = async (data: { user: string; password: string; captchaToken: string }) => {
+  const loginUser = async (data: {
+    user: string;
+    password: string;
+    captchaToken: string;
+  }) => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -65,17 +70,30 @@ export default function Login() {
   };
 
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4'>
-      <div className='w-full max-w-md mx-auto bg-white rounded-xl shadow-lg border border-gray-100 p-8'>
-        <h2 className='text-4xl font-bold text-center bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300 mb-8'>
-          📚 BookWorm
+    <main
+      className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4'
+      role='main'
+      aria-label='Login page'
+    >
+      <div
+        className='w-full max-w-md mx-auto bg-white rounded-xl shadow-lg border border-gray-100 p-8'
+        role='region'
+        aria-label='Login form container'
+      >
+        <h2 className='flex text-4xl font-bold justify-center gap-x-2 bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300 mb-8'>
+          <Image src='/icons/booksIcon.png' alt='' width={40} height={40} />
+          ClassicNooks
         </h2>
         <div className='space-y-6'>
           <h1 className='text-2xl font-semibold text-gray-900 text-center'>
             Sign in to your account
           </h1>
-          <form className='space-y-6' onSubmit={(e) => handleSubmit(e)}>
-            <div className='space-y-2'>
+          <form
+            className='space-y-6'
+            onSubmit={(e) => handleSubmit(e)}
+            aria-label='Login form'
+          >
+            <div className='space-y-2' role='group' aria-label='Username input'>
               <label
                 htmlFor='user'
                 className='block text-sm font-medium text-gray-700'
@@ -91,7 +109,7 @@ export default function Login() {
                 placeholder='Enter your Username'
               />
             </div>
-            <div className='space-y-2'>
+            <div className='space-y-2' role='group' aria-label='Password input'>
               <label
                 htmlFor='password'
                 className='block text-sm font-medium text-gray-700'
@@ -116,7 +134,11 @@ export default function Login() {
               />
             </div>
             {mutation.isError && (
-              <p className='text-red-500 text-center text-sm'>
+              <p
+                className='text-red-500 text-center text-sm'
+                role='alert'
+                aria-live='polite'
+              >
                 {mutation.error.message}
               </p>
             )}
@@ -124,6 +146,11 @@ export default function Login() {
               type='submit'
               disabled={mutation.isPending}
               className='w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-500/50'
+              aria-label={
+                mutation.isPending
+                  ? 'Signing in, please wait'
+                  : 'Sign in to your account'
+              }
             >
               {mutation.isPending ? 'Signing in...' : 'Sign In'}
             </button>

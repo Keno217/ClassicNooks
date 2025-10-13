@@ -4,9 +4,9 @@ import pool from '@/lib/db.ts';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id } = await context.params;
 
   // Validate/sanitize input
   if (!id || isNaN(Number(id))) {
@@ -29,7 +29,10 @@ export async function GET(
   const user = await getUserFromSession(req);
 
   if (!user)
-    return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'User not authenticated' },
+      { status: 401 }
+    );
 
   try {
     // DB query to get status of whether the user has favorited the book
@@ -55,9 +58,9 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id } = await context.params;
 
   // Validate/sanitize input
   if (!id || isNaN(Number(id))) {
@@ -110,9 +113,9 @@ export async function POST(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id } = await context.params;
 
   // Validate/sanitize input
   if (!id || isNaN(Number(id))) {

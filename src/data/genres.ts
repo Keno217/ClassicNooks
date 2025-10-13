@@ -1,4 +1,4 @@
-export default [
+const genres = [
   // Genres provided by my app
   'Adventure',
   'Fantasy',
@@ -183,3 +183,5 @@ export default [
   'Academic fiction',
   'Campus satire',
 ];
+
+export default genres;
