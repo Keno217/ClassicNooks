@@ -29,8 +29,8 @@ export async function DELETE(req: NextRequest) {
 
     response.cookies.set('session', '', {
       httpOnly: true,
-      secure: false /* true */,
-      sameSite: 'lax' /* none TODO: Add CRSF protections later before deployment */,
+      secure: true,
+      sameSite: 'lax',
       path: '/',
       expires: new Date(0),
     });

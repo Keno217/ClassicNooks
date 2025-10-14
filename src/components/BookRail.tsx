@@ -30,7 +30,7 @@ export default function BookRail({
       return data;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
-      console.log('Error registering user:', message);
+      console.log('Error fetching books:', message);
       throw new Error(message);
     }
   };

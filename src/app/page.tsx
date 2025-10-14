@@ -35,7 +35,6 @@ export default function Home() {
         <BookRail title='Trending' url='/api/books' />
         <BookRail title='Adventure' url='/api/books?genre=adventure' />
         <BookRail title='Fantasy' url='/api/books?genre=fantasy' />
-        <BookRail title='Dystopian' url='/api/books?genre=dystopia' />
         <BookRail title='Sci-Fi' url='/api/books?genre=science%20fiction' />
         <BookRail title='Mystery' url='/api/books?genre=mystery' />
         <BookRail title='Romance' url='/api/books?genre=romance' />

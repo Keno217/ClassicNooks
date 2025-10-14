@@ -220,10 +220,10 @@ export default function Privacy() {
             </p>
             <p className='text-gray-700'>
               <a
-                href='mailto:privacy@classicnooks.com'
+                href='mailto:kvelagic22@gmail.com'
                 className='text-blue-600 hover:underline'
               >
-                privacy@classicnooks.com
+                kvelagic22@gmail.com
               </a>
             </p>
           </section>
